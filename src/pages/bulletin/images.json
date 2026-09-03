@@ -1,0 +1,5 @@
+[
+  { "id": "sample-1", "label": "Sunny 150", "url": "https://picsum.photos/200" },
+  { "id": "sample-2", "label": "Cloudy 150", "url": "https://picsum.photos/200/300" },
+  { "id": "sample-3", "label": "Rain 150", "url": "https://picsum.photos/200/400" }
+]

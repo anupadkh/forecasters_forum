@@ -1,0 +1,68 @@
+.root {
+  padding: 1rem 0.5rem 4rem 0.5rem;
+}
+.section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 6px;
+  background: #fff;
+}
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.accordionBody {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 300ms ease;
+}
+.accordionOpen {
+  max-height: 2000px;
+}
+.floatingNav {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 1400;
+  background: #fff;
+  padding: 8px;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+}
+.floatingNav .btn {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+/* Draft.js block styles used in the editor */
+.public-DraftStyleDefault-blockquote {
+  margin: 0 0 1rem 0;
+  padding-left: 1rem;
+  border-left: 4px solid rgba(0,0,0,0.12);
+  color: #444;
+}
+.public-DraftStyleDefault-header-one {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.public-DraftStyleDefault-header-two {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.public-DraftStyleDefault-list-item {
+  margin: 0.25rem 0;
+}
+.listItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.recentPreview {
+  max-height: 60px;
+}

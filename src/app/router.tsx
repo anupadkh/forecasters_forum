@@ -25,6 +25,8 @@ const PostListPage = lazy(() => import('../pages/posts/list/PostList'));
 const PostNewPage = lazy(() => import('../pages/posts/new/PostNew'));
 const NotFoundPage = lazy(() => import('../pages/notFound/NotFound'));
 const TermsPage = lazy(() => import('../pages/terms/Terms'));
+const BulletinPage = lazy(() => import('../pages/bulletin/Bulletin'));
+const BulletinListPage = lazy(() => import('../pages/bulletin/List'));
 
 const routeLoader =
   (predicate: () => boolean, targetPath: string) =>
@@ -36,7 +38,7 @@ const routeLoader =
     return null;
   };
 
-const rootRedirectLoader = async () => redirect(hasActiveSession() ? '/app/main' : '/login');
+const rootRedirectLoader = async () => redirect(hasActiveSession() ? '/app/bulletin/list' : '/login');
 
 const PageFallback = () => (
   <div className="d-flex min-vh-100 align-items-center justify-content-center">
@@ -92,8 +94,10 @@ export const routes: RouteObject[] = [
     element: <Layout />,
     errorElement: <RouteErrorBoundary />,
     children: [
-      { index: true, loader: async () => redirect('/app/main') },
+      { index: true, loader: async () => redirect('/app/bulletin/list') },
       { path: 'main', element: renderLazyPage(DashboardPage) },
+      { path: 'bulletin', element: renderLazyPage(BulletinPage) },
+      { path: 'bulletin/list', element: renderLazyPage(BulletinListPage) },
       { path: 'typography', element: renderLazyPage(TypographyPage) },
       { path: 'tables', element: renderLazyPage(TablesPage) },
       { path: 'notifications', element: renderLazyPage(NotificationsPage) },

@@ -13,7 +13,7 @@ const Sidebar = () => (
       </Link>
     </header>
     <ul className={s.nav}>
-      <LinksGroup glyph="dashboard" header="Dashboard" headerLink="/app/main" />
+      {/* <LinksGroup glyph="dashboard" header="Dashboard" headerLink="/app/main" />
       <LinksGroup glyph="typography" header="Typography" headerLink="/app/typography" />
       <LinksGroup glyph="tables" header="Tables Basic" headerLink="/app/tables" />
       <LinksGroup glyph="notifications" header="Notifications" headerLink="/app/notifications" />
@@ -26,6 +26,15 @@ const Sidebar = () => (
           { name: 'Charts', link: '/app/components/charts' },
           { name: 'Icons', link: '/app/components/icons' },
           { name: 'Maps', link: '/app/components/maps' },
+        ]}
+      /> */}
+      <LinksGroup
+        glyph="bulletin"
+        header="Bulletin"
+        headerLink="/app/bulletin"
+        childrenLinks={[
+          { name: 'Create Bulletin', link: '/app/bulletin' },
+          { name: 'List Bulletins', link: '/app/bulletin/list' },
         ]}
       />
     </ul>

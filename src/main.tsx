@@ -11,6 +11,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import './styles/fonts.css';
 import './styles/theme.scss';
 
+// Some libraries expect a Node-like `global` to exist in the browser.
+// Provide a small shim so imports like Draft.js work without bundler polyfills.
+(window as any).global = window;
+
 const container = document.getElementById('root');
 
 if (!container) {
