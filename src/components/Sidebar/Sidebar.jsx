@@ -35,6 +35,8 @@ const Sidebar = () => (
         childrenLinks={[
           { name: 'Create Bulletin', link: '/app/bulletin' },
           { name: 'List Bulletins', link: '/app/bulletin/list' },
+          { name: 'Design Template', link: '/app/bulletin/designer' },
+          { name: 'Report View', link: '/app/bulletin/report' },
         ]}
       />
     </ul>

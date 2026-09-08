@@ -27,6 +27,8 @@ const NotFoundPage = lazy(() => import('../pages/notFound/NotFound'));
 const TermsPage = lazy(() => import('../pages/terms/Terms'));
 const BulletinPage = lazy(() => import('../pages/bulletin/Bulletin'));
 const BulletinListPage = lazy(() => import('../pages/bulletin/List'));
+const BulletinReportPage = lazy(() => import('../pages/bulletin-report/grid'));
+const BulletinDesignerPage = lazy(() => import('../pages/bulletin-report/designer'));
 
 const routeLoader =
   (predicate: () => boolean, targetPath: string) =>
@@ -98,6 +100,8 @@ export const routes: RouteObject[] = [
       { path: 'main', element: renderLazyPage(DashboardPage) },
       { path: 'bulletin', element: renderLazyPage(BulletinPage) },
       { path: 'bulletin/list', element: renderLazyPage(BulletinListPage) },
+      { path: 'bulletin/designer', element: renderLazyPage(BulletinDesignerPage) },
+      { path: 'bulletin/report', element: renderLazyPage(BulletinReportPage) },
       { path: 'typography', element: renderLazyPage(TypographyPage) },
       { path: 'tables', element: renderLazyPage(TablesPage) },
       { path: 'notifications', element: renderLazyPage(NotificationsPage) },

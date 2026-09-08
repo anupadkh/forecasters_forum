@@ -1,10 +1,11 @@
 import React from 'react';
 import ImagePicker from './ImagePicker';
 import EditableList from './EditableList';
+import SectionHeading from './SectionHeading';
 
-const SevenDay = ({ cards, setCards, images }) => (
+const SevenDay = ({ title, subtitle, setTitle, setSubtitle, cards, setCards, images }) => (
   <section>
-    <h3>7-day Outlook</h3>
+    <SectionHeading sectionKey="seven-day" title={title} subtitle={subtitle} setTitle={setTitle} setSubtitle={setSubtitle} />
     <EditableList
       items={cards}
       onChange={setCards}

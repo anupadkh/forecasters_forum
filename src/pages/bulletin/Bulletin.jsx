@@ -16,22 +16,48 @@ import BulletinNavigator from './components/BulletinNavigator';
 
 // Using componentized sections below
 
+const STORAGE_KEY = 'unSavedDraft';
+const DEFAULT_SECTION_TITLES = {
+  realized: 'Realized Weather',
+  keyMessages: 'Key Messages',
+  drivers: 'Regional Drivers',
+  sevenDay: '7-day Outlook',
+  extended: 'Extended Range Outlook',
+  oceanWatch: 'Ocean Watch',
+  logos: 'Logos',
+};
+
+const readDraft = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (err) {
+    return {};
+  }
+};
+
 const Bulletin = () => {
-  const [meta, setMeta] = useState({ title: '', date: '', subtitle: '', name: '' });
-  const [realized, setRealized] = useState([]);
-  const [keyMessages, setKeyMessages] = useState([]);
-  const [driversTitle, setDriversTitle] = useState('Regional Drivers');
-  const [drivers, setDrivers] = useState([]);
-  const [sevenDay, setSevenDay] = useState(Array.from({ length: 0 }, () => ({ title: '', desc: '', image: '' })));
-  const [extended, setExtended] = useState([]);
-  const [oceanWatch, setOceanWatch] = useState([]);
-  const [logos, setLogos] = useState([]);
+  const [draft] = useState(readDraft);
+  const initialSectionTitles = {
+    ...DEFAULT_SECTION_TITLES,
+    ...(draft.sectionTitles || {}),
+    ...(draft.driversTitle ? { drivers: draft.driversTitle } : {}),
+  };
+  const [meta, setMeta] = useState(draft.meta || { title: '', date: '', subtitle: '', name: '' });
+  const [realized, setRealized] = useState(draft.realized || []);
+  const [keyMessages, setKeyMessages] = useState(draft.keyMessages || []);
+  const [drivers, setDrivers] = useState(draft.drivers || []);
+  const [sevenDay, setSevenDay] = useState(draft.sevenDay || []);
+  const [extended, setExtended] = useState(draft.extended || []);
+  const [oceanWatch, setOceanWatch] = useState(draft.oceanWatch || []);
+  const [logos, setLogos] = useState(draft.logos || []);
+  const [sectionTitles, setSectionTitles] = useState(initialSectionTitles);
+  const [sectionSubtitles, setSectionSubtitles] = useState(draft.sectionSubtitles || {});
   const [images, setImages] = useState([]);
   const [openSection, setOpenSection] = useState('metadata');
-  const STORAGE_KEY = 'bulletin:draft';
 
   const saveBulletin = () => {
-    const payload = { meta, realized, keyMessages, driversTitle, drivers, sevenDay, extended, oceanWatch, logos, savedAt: Date.now() };
+    const payload = { meta, realized, keyMessages, drivers, sevenDay, extended, oceanWatch, logos, driversTitle: sectionTitles.drivers, sectionTitles, sectionSubtitles, savedAt: Date.now() };
     try {
       // Prefer meta.date as storage key when available, sanitized to a safe token
       const dateKey = (meta && meta.date) ? String(meta.date).trim() : '';
@@ -39,6 +65,7 @@ const Bulletin = () => {
         ? `bulletin:${dateKey.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_\-:]/g, '')}`
         : `bulletin:${Date.now()}`;
       localStorage.setItem(safeKey, JSON.stringify(payload));
+      localStorage.removeItem(STORAGE_KEY);
       toast.success('Bulletin saved to list');
     } catch (err) {
       toast.error('Failed to save bulletin');
@@ -55,26 +82,50 @@ const Bulletin = () => {
     return () => { mounted = false; };
   }, []);
 
-  // Load saved bulletin draft from localStorage if present
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (data.meta) setMeta(data.meta);
-        if (Array.isArray(data.realized)) setRealized(data.realized);
-        if (Array.isArray(data.keyMessages)) setKeyMessages(data.keyMessages);
-        if (data.driversTitle) setDriversTitle(data.driversTitle);
-        if (Array.isArray(data.drivers)) setDrivers(data.drivers);
-        if (Array.isArray(data.sevenDay)) setSevenDay(data.sevenDay);
-        if (Array.isArray(data.extended)) setExtended(data.extended);
-        if (Array.isArray(data.oceanWatch)) setOceanWatch(data.oceanWatch);
-        if (Array.isArray(data.logos)) setLogos(data.logos);
+    const timeoutId = window.setTimeout(() => {
+      const payload = {
+        meta,
+        realized,
+        keyMessages,
+        driversTitle: sectionTitles.drivers,
+        drivers,
+        sevenDay,
+        extended,
+        oceanWatch,
+        logos,
+        sectionTitles,
+        sectionSubtitles,
+        savedAt: Date.now(),
+      };
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (err) {
+        // Ignore storage quota and unavailable-storage errors.
       }
-    } catch (err) {
-      // ignore parse errors
-    }
-  }, []);
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [meta, realized, keyMessages, drivers, sevenDay, extended, oceanWatch, logos, sectionTitles, sectionSubtitles]);
+
+  /* Previous generic subtitle implementation, retained for reference:
+  const renderSectionSubtitle = (sectionKey) => (
+    <div className="mb-3">
+      <label className="form-label" htmlFor={`subtitle-${sectionKey}`}>Section subtitle</label>
+      <input
+        id={`subtitle-${sectionKey}`}
+        className="form-control"
+        value={sectionSubtitles[sectionKey] || ''}
+        onChange={(event) => setSectionSubtitles((previous) => ({
+          ...previous,
+          [sectionKey]: event.target.value,
+        }))}
+        placeholder="Add a subtitle"
+      />
+    </div>
+  );
+  */
 
   return (
     <div className={s.root}>
@@ -111,7 +162,8 @@ const Bulletin = () => {
           <div>{openSection === 'realized' ? '▲' : '▼'}</div>
         </div>
         <div className={`${s.accordionBody} ${openSection === 'realized' ? s.accordionOpen : ''}`}>
-          <RealizedWeather items={realized} setItems={setRealized} images={images} />
+          {/* {renderSectionSubtitle('realized')} */}
+          <RealizedWeather title={sectionTitles.realized} subtitle={sectionSubtitles.realized} setTitle={(value) => setSectionTitles((previous) => ({ ...previous, realized: value }))} setSubtitle={(value) => setSectionSubtitles((previous) => ({ ...previous, realized: value }))} items={realized} setItems={setRealized} images={images} />
         </div>
       </section>
 
@@ -121,17 +173,19 @@ const Bulletin = () => {
           <div>{openSection === 'key-messages' ? '▲' : '▼'}</div>
         </div>
         <div className={`${s.accordionBody} ${openSection === 'key-messages' ? s.accordionOpen : ''}`}>
-          <KeyMessages items={keyMessages} setItems={setKeyMessages} images={images} />
+          {/* {renderSectionSubtitle('keyMessages')} */}
+          <KeyMessages title={sectionTitles.keyMessages} subtitle={sectionSubtitles.keyMessages} setTitle={(value) => setSectionTitles((previous) => ({ ...previous, keyMessages: value }))} setSubtitle={(value) => setSectionSubtitles((previous) => ({ ...previous, keyMessages: value }))} items={keyMessages} setItems={setKeyMessages} images={images} />
         </div>
       </section>
 
       <section className={s.section}>
         <div className={s.sectionHeader} onClick={() => toggleSection('drivers')}>
-          <div>{openSection === 'drivers' ? null : driversTitle}</div>
+          <div>{openSection === 'drivers' ? null : sectionTitles.drivers}</div>
           <div>{openSection === 'drivers' ? '▲' : '▼'}</div>
         </div>
         <div className={`${s.accordionBody} ${openSection === 'drivers' ? s.accordionOpen : ''}`}>
-          <Drivers title={driversTitle} setTitle={setDriversTitle} items={drivers} setItems={setDrivers} images={images} />
+          {/* {renderSectionSubtitle('drivers')} */}
+          <Drivers title={sectionTitles.drivers} subtitle={sectionSubtitles.drivers} setTitle={(value) => setSectionTitles((previous) => ({ ...previous, drivers: value }))} setSubtitle={(value) => setSectionSubtitles((previous) => ({ ...previous, drivers: value }))} items={drivers} setItems={setDrivers} images={images} />
         </div>
       </section>
 
@@ -141,7 +195,8 @@ const Bulletin = () => {
           <div>{openSection === 'seven-day' ? '▲' : '▼'}</div>
         </div>
         <div className={`${s.accordionBody} ${openSection === 'seven-day' ? s.accordionOpen : ''}`}>
-          <SevenDay cards={sevenDay} setCards={setSevenDay} images={images} />
+          {/* {renderSectionSubtitle('sevenDay')} */}
+          <SevenDay title={sectionTitles.sevenDay} subtitle={sectionSubtitles.sevenDay} setTitle={(value) => setSectionTitles((previous) => ({ ...previous, sevenDay: value }))} setSubtitle={(value) => setSectionSubtitles((previous) => ({ ...previous, sevenDay: value }))} cards={sevenDay} setCards={setSevenDay} images={images} />
         </div>
       </section>
 
@@ -151,7 +206,8 @@ const Bulletin = () => {
           <div>{openSection === 'extended' ? '▲' : '▼'}</div>
         </div>
         <div className={`${s.accordionBody} ${openSection === 'extended' ? s.accordionOpen : ''}`}>
-          <ExtendedRange items={extended} setItems={setExtended} images={images} />
+          {/* {renderSectionSubtitle('extended')} */}
+          <ExtendedRange title={sectionTitles.extended} subtitle={sectionSubtitles.extended} setTitle={(value) => setSectionTitles((previous) => ({ ...previous, extended: value }))} setSubtitle={(value) => setSectionSubtitles((previous) => ({ ...previous, extended: value }))} items={extended} setItems={setExtended} images={images} />
         </div>
       </section>
 
@@ -161,7 +217,8 @@ const Bulletin = () => {
           <div>{openSection === 'ocean' ? '▲' : '▼'}</div>
         </div>
         <div className={`${s.accordionBody} ${openSection === 'ocean' ? s.accordionOpen : ''}`}>
-          <OceanWatch items={oceanWatch} setItems={setOceanWatch} images={images} />
+          {/* {renderSectionSubtitle('oceanWatch')} */}
+          <OceanWatch title={sectionTitles.oceanWatch} subtitle={sectionSubtitles.oceanWatch} setTitle={(value) => setSectionTitles((previous) => ({ ...previous, oceanWatch: value }))} setSubtitle={(value) => setSectionSubtitles((previous) => ({ ...previous, oceanWatch: value }))} items={oceanWatch} setItems={setOceanWatch} images={images} />
         </div>
       </section>
 
@@ -171,7 +228,8 @@ const Bulletin = () => {
           <div>{openSection === 'logos' ? '▲' : '▼'}</div>
         </div>
         <div className={`${s.accordionBody} ${openSection === 'logos' ? s.accordionOpen : ''}`}>
-          <Logos images={images} logos={logos} setLogos={setLogos} />
+          {/* {renderSectionSubtitle('logos')} */}
+          <Logos title={sectionTitles.logos} subtitle={sectionSubtitles.logos} setTitle={(value) => setSectionTitles((previous) => ({ ...previous, logos: value }))} setSubtitle={(value) => setSectionSubtitles((previous) => ({ ...previous, logos: value }))} images={images} logos={logos} setLogos={setLogos} />
         </div>
       </section>
 

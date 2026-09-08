@@ -1,8 +1,9 @@
 import React from 'react';
+import SectionHeading from './SectionHeading';
 
-const Logos = ({ images, logos, setLogos }) => (
+const Logos = ({ title, subtitle, setTitle, setSubtitle, images, logos, setLogos }) => (
   <section>
-    <h3>Logos</h3>
+    <SectionHeading sectionKey="logos" title={title} subtitle={subtitle} setTitle={setTitle} setSubtitle={setSubtitle} />
     <div className="mb-2">
       <div className="d-flex flex-wrap gap-2">
         {images.map((img) => {

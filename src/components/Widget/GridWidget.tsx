@@ -1,3 +1,5 @@
+import s from './GridWidget.module.scss';
+
 interface GridWidgetProps {
   title?: string;
   isEditing?: boolean;
@@ -16,26 +18,17 @@ export default function GridWidget({
   onToggleResize
 }: GridWidgetProps) {
   return (
-    <div style={{ 
-      height: '100%',             
-      boxSizing: 'border-box',    
-      padding: '20px', 
-      border: '1px solid #ccc', 
-      borderRadius: '8px',
-      backgroundColor: '#ffffff',
-      display: 'flex',
-      flexDirection: 'column' // Helps us push content to the top and buttons to the bottom
-    }}>
-      <h3 style={{ marginTop: 0 }}>{title}</h3>
-      <p style={{ flexGrow: 1 }}>This widget is {isDraggable ? 'Draggable' : 'Locked'}!</p>
+    <div className={`${s.widget} ${isEditing ? s.editing : ''}`}>
+      <h3 className={s.title}>{title}</h3>
+      <p className={s.status}>This widget is {isDraggable ? 'Draggable' : 'Locked'}!</p>
 
       {/* Only show these buttons if the global Edit Mode is ON */}
       {isEditing && (
-        <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-          <button onClick={onToggleDrag}>
+        <div className={s.controls}>
+          <button className={s.controlButton} type="button" onClick={onToggleDrag}>
             {isDraggable ? '🔓 Lock Drag' : '🔒 Unlock Drag'}
           </button>
-          <button onClick={onToggleResize}>
+          <button className={s.controlButton} type="button" onClick={onToggleResize}>
             {isResizable ? '🔓 Lock Resize' : '🔒 Unlock Resize'}
           </button>
         </div>

@@ -35,7 +35,7 @@
 }
 
 .sidebarOpen {
-  @include media-breakpoint-down(sm) {
+  @include media-breakpoint-down(md) {
     left: $sidebar-width-open;
     right: -$sidebar-width-open;
   }

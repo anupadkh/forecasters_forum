@@ -24,7 +24,9 @@ const Layout = () => {
       <a className={s.skipLink} href="#main-content">
         Skip to main content
       </a>
-      <Sidebar />
+      <div className={cx({ 'sidebar-open': sidebarOpen })}>
+        <Sidebar />
+      </div>
       <div className={cx(s.wrap, { [s.sidebarOpen]: sidebarOpen })}>
         <Header sidebarOpen={sidebarOpen} sidebarToggle={() => dispatch(toggleSidebar())} />
         <main className={s.content} id="main-content" tabIndex={-1}>

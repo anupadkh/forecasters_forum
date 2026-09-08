@@ -1,9 +1,9 @@
 // src/store/atoms.ts
 import { atom } from 'jotai';
-import type { Layout } from 'react-grid-layout';
+import type { LayoutItem } from 'react-grid-layout';
 
 // 1. Let's define a custom type so TypeScript knows about our extra lock properties!
-export interface CustomLayout extends Layout {
+export interface CustomLayout extends LayoutItem {
   isDraggable?: boolean;
   isResizable?: boolean;
 }

@@ -1,10 +1,11 @@
 import React from 'react';
 import ImagePicker from './ImagePicker';
 import EditableList from './EditableList';
+import SectionHeading from './SectionHeading';
 
-const ExtendedRange = ({ items, setItems, images }) => (
+const ExtendedRange = ({ title, subtitle, setTitle, setSubtitle, items, setItems, images }) => (
   <section>
-    <h3>Extended Range Outlook</h3>
+    <SectionHeading sectionKey="extended" title={title} subtitle={subtitle} setTitle={setTitle} setSubtitle={setSubtitle} />
     <EditableList
       items={items}
       onChange={setItems}

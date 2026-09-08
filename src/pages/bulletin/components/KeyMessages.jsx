@@ -2,10 +2,11 @@ import React from 'react';
 import ImagePicker from './ImagePicker';
 import EditableList from './EditableList';
 import RichText from './RichText';
+import SectionHeading from './SectionHeading';
 
-const KeyMessages = ({ items, setItems, images }) => (
+const KeyMessages = ({ title, subtitle, setTitle, setSubtitle, items, setItems, images }) => (
   <section>
-    <h3>Key Messages</h3>
+    <SectionHeading sectionKey="key-messages" title={title} subtitle={subtitle} setTitle={setTitle} setSubtitle={setSubtitle} />
     <EditableList
       items={items}
       onChange={setItems}

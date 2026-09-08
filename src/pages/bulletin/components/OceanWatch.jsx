@@ -1,10 +1,11 @@
 import React from 'react';
 import ImagePicker from './ImagePicker';
 import EditableList from './EditableList';
+import SectionHeading from './SectionHeading';
 
-const OceanWatch = ({ items, setItems, images }) => (
+const OceanWatch = ({ title, subtitle, setTitle, setSubtitle, items, setItems, images }) => (
   <section>
-    <h3>Ocean Watch</h3>
+    <SectionHeading sectionKey="ocean-watch" title={title} subtitle={subtitle} setTitle={setTitle} setSubtitle={setSubtitle} />
     <EditableList
       items={items}
       onChange={setItems}

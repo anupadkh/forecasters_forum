@@ -2,10 +2,11 @@ import React from 'react';
 import ImagePicker from './ImagePicker';
 import EditableList from './EditableList';
 import RichText from './RichText';
+import SectionHeading from './SectionHeading';
 
-const RealizedWeather = ({ items, setItems, images }) => (
+const RealizedWeather = ({ title, subtitle, setTitle, setSubtitle, items, setItems, images }) => (
   <section>
-    <h3>Realized Weather</h3>
+    <SectionHeading sectionKey="realized" title={title} subtitle={subtitle} setTitle={setTitle} setSubtitle={setSubtitle} />
     <EditableList
       items={items}
       onChange={setItems}

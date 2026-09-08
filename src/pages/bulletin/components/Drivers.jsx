@@ -2,11 +2,11 @@ import React from 'react';
 import ImagePicker from './ImagePicker';
 import EditableList from './EditableList';
 import RichText from './RichText';
+import SectionHeading from './SectionHeading';
 
-const Drivers = ({ title, setTitle, items, setItems, images }) => (
+const Drivers = ({ title, subtitle, setTitle, setSubtitle, items, setItems, images }) => (
   <section>
-    <h3>{title}</h3>
-    <div className="mb-2"><input className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+    <SectionHeading sectionKey="drivers" title={title} subtitle={subtitle} setTitle={setTitle} setSubtitle={setSubtitle} />
     <EditableList
       items={items}
       onChange={setItems}

@@ -8,6 +8,17 @@
   bottom: 0;
   background-color: $sidebar-bg-color;
   color: $sidebar-color;
+
+  @include media-breakpoint-down(md) {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+}
+
+:global(.sidebar-open) {
+  .root {
+    transform: translateX(0);
+  }
 }
 
 .logo {
