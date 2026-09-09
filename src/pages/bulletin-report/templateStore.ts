@@ -122,6 +122,9 @@ export const generateTemplateCss = (template: TemplateConfig): string => {
       if (itemTitleNode?.borderColor) vars.push(`--report-item-title-border-color: ${itemTitleNode.borderColor};`);
       if (itemTitleNode?.borderWidth) vars.push(`--report-item-title-border-width: ${itemTitleNode.borderWidth};`);
       if (itemTitleNode?.borderRadius) vars.push(`--report-item-title-border-radius: ${itemTitleNode.borderRadius};`);
+      if (sec.layout.columnWidths) {
+        vars.push(`--report-grid-template-columns: ${sec.layout.columnWidths};`);
+      }
       vars.push(`--report-columns: ${sec.layout.columns || 2};`);
 
       if (vars.length && rootNode.id) {

@@ -148,7 +148,13 @@ export default function LivePreview({
                   <div
                     id={content?.id}
                     className={`${content?.className || ''} report-items report-items-${layout.direction}`}
-                    style={{ '--report-columns': layout.columns } as React.CSSProperties}
+                    style={
+                      {
+                        '--report-columns': layout.columns,
+                        '--report-grid-template-columns': layout.columnWidths || undefined,
+                        gridTemplateColumns: layout.columnWidths || undefined,
+                      } as React.CSSProperties
+                    }
                     onClick={(e) => {
                       e.stopPropagation();
                       onSelectNode(sectionKey, 'content');
@@ -175,7 +181,16 @@ export default function LivePreview({
                           >
                             {group.title || 'Ocean Conditions'}
                           </h3>
-                          <div className={`report-items report-items-${layout.direction}`}>
+                          <div
+                            className={`report-items report-items-${layout.direction}`}
+                            style={
+                              {
+                                '--report-columns': layout.columns,
+                                '--report-grid-template-columns': layout.columnWidths || undefined,
+                                gridTemplateColumns: layout.columnWidths || undefined,
+                              } as React.CSSProperties
+                            }
+                          >
                             {(group.items || []).map((subItem: any, sIdx: number) => (
                               <div
                                 key={sIdx}

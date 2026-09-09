@@ -97,4 +97,47 @@ describe('Design Template Engine', () => {
     expect(css).toContain('#custom-realized-subtitle-id');
     expect(css).toContain('display: none !important;');
   });
+
+  it('supports custom column widths in terms of fr units and compiles CSS variables', () => {
+    const base = BUILTIN_TEMPLATES[0]!;
+    const template: TemplateConfig = {
+      ...JSON.parse(JSON.stringify(base)),
+      id: 'test-fr-template',
+      name: 'Fractional Columns Template',
+      sections: {
+        ...base.sections,
+        realized: {
+          layout: {
+            direction: 'column',
+            columns: 2,
+            columnWidths: '2fr 1fr',
+            numbered: true,
+          },
+          nodes: {
+            ...base.sections.realized.nodes,
+          },
+        },
+        sevenDay: {
+          layout: {
+            direction: 'column',
+            columns: 3,
+            columnWidths: '1fr 2fr 1fr',
+            numbered: true,
+          },
+          nodes: {
+            ...base.sections.sevenDay.nodes,
+          },
+        },
+      },
+    };
+
+    saveTemplate(template);
+    const loaded = loadAllTemplates().find((t) => t.id === 'test-fr-template');
+    expect(loaded?.sections.realized.layout.columnWidths).toBe('2fr 1fr');
+    expect(loaded?.sections.sevenDay.layout.columnWidths).toBe('1fr 2fr 1fr');
+
+    const css = generateTemplateCss(template);
+    expect(css).toContain('--report-grid-template-columns: 2fr 1fr;');
+    expect(css).toContain('--report-grid-template-columns: 1fr 2fr 1fr;');
+  });
 });

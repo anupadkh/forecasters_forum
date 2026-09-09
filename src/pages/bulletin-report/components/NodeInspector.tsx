@@ -104,58 +104,215 @@ export default function NodeInspector({
           </div>
         </fieldset>
 
-        {/* 2. Section Layout Controls (When Section Root is selected) */}
-        {selectedNodeKey === 'root' && selectedSectionKey !== 'metadata' && (
-          <fieldset className="inspector-card">
-            <legend>Section Layout & Flow Options</legend>
-            <div className="row g-2">
-              <div className="col-md-6">
-                <label className="form-label small">Flow Direction</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={currentSectionLayout.direction}
-                  onChange={(e) =>
-                    onUpdateSectionLayout(
-                      'direction',
-                      e.target.value as SectionLayoutConfig['direction']
-                    )
-                  }
-                >
-                  <option value="column">Top / Down (Column)</option>
-                  <option value="row">Left / Right (Row)</option>
-                </select>
-              </div>
-              <div className="col-md-6">
-                <label className="form-label small">Grid Columns</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={currentSectionLayout.columns}
-                  onChange={(e) => onUpdateSectionLayout('columns', Number(e.target.value))}
-                >
-                  {[1, 2, 3, 4, 6].map((cols) => (
-                    <option key={cols} value={cols}>
-                      {cols} Column{cols > 1 ? 's' : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-md-12 pt-2">
-                <div className="form-check form-switch">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="switch-numbered"
-                    checked={currentSectionLayout.numbered}
-                    onChange={(e) => onUpdateSectionLayout('numbered', e.target.checked)}
-                  />
-                  <label className="form-check-label small" htmlFor="switch-numbered">
-                    Number Section Title (e.g. 1. Realized Weather)
+        {/* 2. Section Layout Controls (When Section Root or Content is selected) */}
+        {(selectedNodeKey === 'root' || selectedNodeKey === 'content') && selectedSectionKey !== 'metadata' && (() => {
+          const colCount = currentSectionLayout.columns || 2;
+          const currentWidths = currentSectionLayout.columnWidths || Array(colCount).fill('1fr').join(' ');
+          
+          const parseFrTracks = (raw: string | undefined, count: number): number[] => {
+            if (!raw) return Array(count).fill(1);
+            const parts = raw.trim().split(/\s+/);
+            const numbers = parts.map((p) => {
+              const num = parseFloat(p.replace(/fr/i, ''));
+              return isNaN(num) || num <= 0 ? 1 : num;
+            });
+            while (numbers.length < count) numbers.push(1);
+            return numbers.slice(0, count);
+          };
+
+          const trackColors = ['#2563eb', '#059669', '#d97706', '#7c3aed', '#db2777', '#0891b2'];
+          const parsedTracks = parseFrTracks(currentWidths, colCount);
+          const totalFr = parsedTracks.reduce((acc, curr) => acc + curr, 0) || 1;
+
+          const presets = {
+            1: [{ label: '1fr (Full)', value: '1fr' }],
+            2: [
+              { label: '1fr 1fr (1:1 Equal)', value: '1fr 1fr' },
+              { label: '2fr 1fr (2:1 Left heavy)', value: '2fr 1fr' },
+              { label: '1fr 2fr (1:2 Right heavy)', value: '1fr 2fr' },
+              { label: '3fr 1fr (3:1)', value: '3fr 1fr' },
+              { label: '1fr 3fr (1:3)', value: '1fr 3fr' },
+              { label: '1.5fr 1fr (3:2)', value: '1.5fr 1fr' },
+              { label: '1fr 1.5fr (2:3)', value: '1fr 1.5fr' },
+            ],
+            3: [
+              { label: '1fr 1fr 1fr (1:1:1 Equal)', value: '1fr 1fr 1fr' },
+              { label: '2fr 1fr 1fr (2:1:1)', value: '2fr 1fr 1fr' },
+              { label: '1fr 2fr 1fr (1:2:1 Center)', value: '1fr 2fr 1fr' },
+              { label: '1fr 1fr 2fr (1:1:2)', value: '1fr 1fr 2fr' },
+              { label: '2fr 2fr 1fr (2:2:1)', value: '2fr 2fr 1fr' },
+            ],
+            4: [
+              { label: '1fr 1fr 1fr 1fr (Equal)', value: '1fr 1fr 1fr 1fr' },
+              { label: '2fr 1fr 1fr 1fr', value: '2fr 1fr 1fr 1fr' },
+              { label: '1fr 2fr 1fr 1fr', value: '1fr 2fr 1fr 1fr' },
+              { label: '1fr 1fr 2fr 1fr', value: '1fr 1fr 2fr 1fr' },
+              { label: '1fr 1fr 1fr 2fr', value: '1fr 1fr 1fr 2fr' },
+            ],
+            6: [
+              { label: '1fr 1fr 1fr 1fr 1fr 1fr (Equal)', value: '1fr 1fr 1fr 1fr 1fr 1fr' },
+            ],
+          }[colCount] || [];
+
+          return (
+            <fieldset className="inspector-card">
+              <legend>Section Layout & Grid Column Widths (fr)</legend>
+              <div className="row g-2">
+                <div className="col-md-6">
+                  <label className="form-label small">Flow Direction</label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={currentSectionLayout.direction}
+                    onChange={(e) =>
+                      onUpdateSectionLayout(
+                        'direction',
+                        e.target.value as SectionLayoutConfig['direction']
+                      )
+                    }
+                  >
+                    <option value="column">Top / Down (Column)</option>
+                    <option value="row">Left / Right (Row)</option>
+                  </select>
+                </div>
+                <div className="col-md-6">
+                  <label className="form-label small">Grid Columns</label>
+                  <select
+                    className="form-select form-select-sm"
+                    value={colCount}
+                    onChange={(e) => {
+                      const newCols = Number(e.target.value);
+                      onUpdateSectionLayout('columns', newCols);
+                      onUpdateSectionLayout('columnWidths', Array(newCols).fill('1fr').join(' '));
+                    }}
+                  >
+                    {[1, 2, 3, 4, 6].map((cols) => (
+                      <option key={cols} value={cols}>
+                        {cols} Column{cols > 1 ? 's' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Column Widths in fr */}
+                <div className="col-12 pt-1">
+                  <label className="form-label small fw-bold d-flex justify-content-between">
+                    <span>Column Width Ratios (fr tracks)</span>
+                    <span className="text-muted font-monospace">{currentWidths}</span>
                   </label>
+
+                  {/* Quick Ratio Presets */}
+                  {presets.length > 0 && (
+                    <div className="fr-preset-btn-group mb-2">
+                      {presets.map((p) => (
+                        <button
+                          key={p.value}
+                          type="button"
+                          className={`fr-preset-btn ${currentWidths.trim() === p.value ? 'active' : ''}`}
+                          onClick={() => onUpdateSectionLayout('columnWidths', p.value)}
+                          title={`Set column width ratio to ${p.value}`}
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Visual Column Proportion Bar */}
+                  <div className="fr-track-bar-container" title="Visual representation of column width ratios">
+                    {parsedTracks.map((fr, idx) => {
+                      const pct = Math.round((fr / totalFr) * 100);
+                      return (
+                        <div
+                          key={idx}
+                          className="fr-track-segment"
+                          style={{
+                            width: `${(fr / totalFr) * 100}%`,
+                            backgroundColor: trackColors[idx % trackColors.length],
+                          }}
+                        >
+                          Col {idx + 1} ({fr}fr / {pct}%)
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Per-column fr inputs */}
+                {colCount > 1 && (
+                  <div className="col-12 pt-1">
+                    <label className="form-label small text-muted mb-1">Adjust Individual Column Widths (fr):</label>
+                    <div className="row g-2">
+                      {parsedTracks.map((fr, idx) => (
+                        <div key={idx} className={`col-${Math.max(12 / colCount, 3)}`}>
+                          <div className="input-group input-group-sm">
+                            <span
+                              className="input-group-text text-white fw-bold"
+                              style={{
+                                backgroundColor: trackColors[idx % trackColors.length],
+                                minWidth: 32,
+                                justifyContent: 'center',
+                              }}
+                            >
+                              C{idx + 1}
+                            </span>
+                            <input
+                              type="number"
+                              min="0.25"
+                              max="10"
+                              step="0.25"
+                              className="form-control form-control-sm text-center font-monospace"
+                              value={fr}
+                              onChange={(e) => {
+                                const val = parseFloat(e.target.value);
+                                if (!isNaN(val) && val > 0) {
+                                  const updated = [...parsedTracks];
+                                  updated[idx] = val;
+                                  onUpdateSectionLayout('columnWidths', updated.map((n) => `${n}fr`).join(' '));
+                                }
+                              }}
+                              title={`Column ${idx + 1} width in fr`}
+                            />
+                            <span className="input-group-text text-muted">fr</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Custom fr text input */}
+                <div className="col-12 pt-1">
+                  <label className="form-label small text-muted mb-0">Custom CSS Grid Template Track:</label>
+                  <input
+                    type="text"
+                    className="form-control form-control-sm font-monospace"
+                    value={currentSectionLayout.columnWidths || ''}
+                    placeholder="e.g. 2fr 1fr, 1.5fr 1fr, minmax(0, 2fr) 1fr"
+                    onChange={(e) => onUpdateSectionLayout('columnWidths', e.target.value)}
+                  />
+                  <small className="text-muted">
+                    CSS Grid fractional track sizing (e.g. <code>2fr 1fr</code> gives the 1st column 2x the width of the 2nd column)
+                  </small>
+                </div>
+
+                <div className="col-md-12 pt-2">
+                  <div className="form-check form-switch">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="switch-numbered"
+                      checked={currentSectionLayout.numbered}
+                      onChange={(e) => onUpdateSectionLayout('numbered', e.target.checked)}
+                    />
+                    <label className="form-check-label small" htmlFor="switch-numbered">
+                      Number Section Title (e.g. 1. Realized Weather)
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
-          </fieldset>
-        )}
+            </fieldset>
+          );
+        })()}
 
         {/* 3. Typography Styles */}
         <fieldset className="inspector-card">

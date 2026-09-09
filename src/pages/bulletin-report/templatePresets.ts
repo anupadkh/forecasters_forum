@@ -11,6 +11,7 @@ import {
 export const defaultLayoutConfig = (sectionKey: SectionKey): SectionLayoutConfig => ({
   direction: sectionKey === 'logos' ? 'row' : 'column',
   columns: sectionKey === 'logos' ? 4 : sectionKey === 'sevenDay' ? 2 : 2,
+  columnWidths: sectionKey === 'logos' ? '1fr 1fr 1fr 1fr' : '1fr 1fr',
   numbered: sectionKey !== 'metadata' && sectionKey !== 'logos',
 });
 
@@ -220,9 +221,13 @@ export const BUILTIN_TEMPLATES: TemplateConfig[] = [
       true
     );
     compact.sections.realized.layout.columns = 1;
+    compact.sections.realized.layout.columnWidths = '1fr';
     compact.sections.keyMessages.layout.columns = 1;
+    compact.sections.keyMessages.layout.columnWidths = '1fr';
     compact.sections.drivers.layout.columns = 1;
+    compact.sections.drivers.layout.columnWidths = '1fr';
     compact.sections.sevenDay.layout.columns = 1;
+    compact.sections.sevenDay.layout.columnWidths = '1fr';
     const imgNode = compact.sections.realized.nodes.image;
     if (imgNode) {
       imgNode.height = '70px';
@@ -239,7 +244,9 @@ export const BUILTIN_TEMPLATES: TemplateConfig[] = [
       true
     );
     wide.sections.realized.layout.columns = 3;
+    wide.sections.realized.layout.columnWidths = '1fr 1fr 1fr';
     wide.sections.sevenDay.layout.columns = 3;
+    wide.sections.sevenDay.layout.columnWidths = '1fr 1fr 1fr';
     const rootNode = wide.sections.realized.nodes.root;
     if (rootNode) {
       rootNode.backgroundColor = '#f7fafc';

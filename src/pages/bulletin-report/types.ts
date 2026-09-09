@@ -74,6 +74,7 @@ export type NodeStyleConfig = {
 export type SectionLayoutConfig = {
   direction: 'row' | 'column';
   columns: number;
+  columnWidths?: string;
   numbered: boolean;
 };
 

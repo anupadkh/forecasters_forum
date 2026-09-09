@@ -341,6 +341,67 @@
   float: none;
 }
 
+/* Column Widths (fr) UI */
+.fr-preset-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.fr-preset-btn {
+  font-size: 0.72rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: monospace;
+}
+
+.fr-preset-btn:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.fr-preset-btn.active {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #1d4ed8;
+  font-weight: 600;
+}
+
+.fr-track-bar-container {
+  display: flex;
+  height: 24px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  background-color: #f1f5f9;
+  margin-top: 4px;
+}
+
+.fr-track-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #ffffff;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 0 4px;
+  transition: width 0.2s ease;
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.fr-track-segment:last-child {
+  border-right: none;
+}
+
+
 /* Right Column: Live Preview */
 .designer-live-preview-panel {
   background-color: #cbd5e1;
@@ -521,7 +582,7 @@
 
 .report-items {
   display: grid;
-  grid-template-columns: repeat(var(--report-columns, 2), minmax(0, 1fr));
+  grid-template-columns: var(--report-grid-template-columns, repeat(var(--report-columns, 2), minmax(0, 1fr)));
   gap: 8px;
 }
 

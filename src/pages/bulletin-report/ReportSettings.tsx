@@ -8,6 +8,7 @@ export type SectionSettings = {
   contentType: ContentType;
   direction: Direction;
   columns: number;
+  columnWidths?: string;
   showSubtitle: boolean;
   numbered: boolean;
   imageWidth: number;
@@ -55,9 +56,21 @@ export default function ReportSettings({ sectionTitle, settings, onChange, onClo
           </select>
         </label>
         <label>Columns
-          <select value={settings.columns} onChange={(event) => onChange('columns', Number(event.target.value))}>
+          <select value={settings.columns} onChange={(event) => {
+            const cols = Number(event.target.value);
+            onChange('columns', cols);
+            onChange('columnWidths', Array(cols).fill('1fr').join(' '));
+          }}>
             {[1, 2, 3, 4].map((columns) => <option key={columns} value={columns}>{columns}</option>)}
           </select>
+        </label>
+        <label>Column widths (fr)
+          <input
+            type="text"
+            value={settings.columnWidths || ''}
+            onChange={(event) => onChange('columnWidths', event.target.value)}
+            placeholder="e.g. 1fr 1fr, 2fr 1fr"
+          />
         </label>
         <label><input type="checkbox" checked={settings.showSubtitle} onChange={(event) => onChange('showSubtitle', event.target.checked)} /> Show subtitle</label>
         <label><input type="checkbox" checked={settings.numbered} onChange={(event) => onChange('numbered', event.target.checked)} /> Number title</label>

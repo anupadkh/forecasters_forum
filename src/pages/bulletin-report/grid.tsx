@@ -214,7 +214,13 @@ function ReportSectionCard({
       <div
         id={contentNode?.id}
         className={`${contentNode?.className || ''} report-items report-items-${layout.direction}`}
-        style={{ '--report-columns': layout.columns } as React.CSSProperties}
+        style={
+          {
+            '--report-columns': layout.columns,
+            '--report-grid-template-columns': layout.columnWidths || undefined,
+            gridTemplateColumns: layout.columnWidths || undefined,
+          } as React.CSSProperties
+        }
       >
         {section.key === 'oceanWatch' ? (
           section.items.length ? (
@@ -233,7 +239,16 @@ function ReportSectionCard({
                   <h3 id={groupTitleNode?.id} className={groupTitleNode?.className}>
                     {String(group.title || 'Ocean conditions')}
                   </h3>
-                  <div className={`report-items report-items-${layout.direction} report-items-ocean-${groupIndex}`}>
+                  <div
+                    className={`report-items report-items-${layout.direction} report-items-ocean-${groupIndex}`}
+                    style={
+                      {
+                        '--report-columns': layout.columns,
+                        '--report-grid-template-columns': layout.columnWidths || undefined,
+                        gridTemplateColumns: layout.columnWidths || undefined,
+                      } as React.CSSProperties
+                    }
+                  >
                     {children.length ? (
                       children.map((child, childIndex) =>
                         renderItem(
