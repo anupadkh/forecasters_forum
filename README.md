@@ -1,4 +1,4 @@
-# React Dashboard Template
+# Forecasters Forum Template
 
 Modern dashboard starter rebuilt on top of `Vite`, `React 19`, `React Router 7`, `Redux Toolkit`, `Bootstrap 5`, and `TypeScript` tooling.
 

@@ -1,6 +1,5 @@
 import {
   type SectionKey,
-  type SectionLayoutConfig,
   type NodeStyleConfig,
   type SectionTemplateConfig,
   type TemplateConfig,
@@ -8,170 +7,157 @@ import {
   ALL_SECTION_KEYS,
 } from './types';
 
-export const defaultLayoutConfig = (sectionKey: SectionKey): SectionLayoutConfig => ({
-  direction: sectionKey === 'logos' ? 'row' : 'column',
-  columns: sectionKey === 'logos' ? 4 : sectionKey === 'sevenDay' ? 2 : 2,
-  columnWidths: sectionKey === 'logos' ? '1fr 1fr 1fr 1fr' : '1fr 1fr',
-  numbered: sectionKey !== 'metadata' && sectionKey !== 'logos',
-});
+export const getDefaultNodeCss = (sectionKey: SectionKey, nodeKey: string): string => {
+  if (sectionKey === 'metadata') {
+    switch (nodeKey) {
+      case 'root':
+        return 'background: linear-gradient(135deg, #0b3c83 0%, #1e3a8a 100%);\ncolor: #ffffff;\npadding: 16px 20px;\nborder-radius: 6px;\ntext-align: center;\nmargin-bottom: 16px;';
+      case 'title':
+        return 'font-size: 22px;\nfont-weight: 800;\ncolor: #ffffff;\nmargin: 0;';
+      case 'subtitle':
+        return 'font-size: 14px;\ncolor: #bee3f8;\nmargin-top: 6px;\nmargin-bottom: 0;';
+      case 'date':
+        return 'font-size: 12px;\ncolor: #e2e8f0;\nmargin-top: 4px;\ndisplay: block;';
+      default:
+        return '';
+    }
+  }
+
+  if (sectionKey === 'logos') {
+    switch (nodeKey) {
+      case 'root':
+        return 'background-color: #ffffff;\nborder: 1px solid #e2e8f0;\nborder-radius: 6px;\npadding: 12px;\nmargin-bottom: 8px;';
+      case 'header':
+        return 'border-bottom: 2px solid #cbd5e1;\npadding-bottom: 4px;\nmargin-bottom: 8px;';
+      case 'title':
+        return 'font-size: 16px;\nfont-weight: 700;\ncolor: #334155;\nmargin: 0;';
+      case 'subtitle':
+        return 'font-size: 11px;\ncolor: #64748b;\nmargin: 2px 0 0 0;';
+      case 'content':
+        return 'display: flex;\nflex-wrap: wrap;\nalign-items: center;\njustify-content: center;\ngap: 16px;';
+      case 'item':
+        return 'background-color: transparent;\nborder: none;\npadding: 4px;\ndisplay: flex;\nflex-direction: column;\nalign-items: center;\ntext-align: center;\nwidth: auto;';
+      case 'image':
+        return 'max-height: 38px;\nwidth: auto;\nobject-fit: contain;\nmargin-bottom: 4px;';
+      case 'itemTitle':
+        return 'font-size: 11px;\nfont-weight: 600;\ncolor: #64748b;\nbackground: transparent;\npadding: 0;';
+      default:
+        return '';
+    }
+  }
+
+  // Standard content sections
+  switch (nodeKey) {
+    case 'root':
+      return 'background-color: #ebf8ff;\nborder: 1px solid #2b6cb0;\nborder-radius: 6px;\npadding: 12px;\nmargin-bottom: 12px;';
+    case 'header':
+      return 'border-bottom: 3px solid #0b3c83;\npadding-bottom: 6px;\nmargin-bottom: 10px;';
+    case 'title':
+      return 'font-size: 18px;\nfont-weight: 700;\ncolor: #0b3c83;\nmargin: 0;';
+    case 'subtitle':
+      return 'font-size: 12px;\ncolor: #2b6cb0;\nmargin: 4px 0 0 0;';
+    case 'content':
+      return 'display: grid;\ngrid-template-columns: repeat(2, minmax(0, 1fr));\ngap: 8px;';
+    case 'item':
+      return 'background-color: #ffffff;\nborder: 1px solid #e2e8f0;\nborder-radius: 4px;\npadding: 8px;\ndisplay: flex;\nflex-direction: column;';
+    case 'image':
+      return 'width: 100%;\nmax-width: 180px;\nheight: 90px;\nborder-radius: 3px;\nobject-fit: cover;\nmargin-bottom: 6px;\nalign-self: center;';
+    case 'itemTitle':
+      return 'font-size: 13px;\nfont-weight: 700;\ncolor: #2d3748;\nbackground-color: #f7fafc;\npadding: 4px 6px;\nborder-radius: 3px;\nmargin-bottom: 4px;\ngrid-column: 1 / -1;';
+    case 'itemDesc':
+      return 'font-size: 12px;\ncolor: #4a5568;\nline-height: 1.4;\nmargin: 0;';
+    case 'group':
+      return 'background-color: rgba(255, 255, 255, 0.6);\nborder: 1px solid #cbd5e0;\nborder-radius: 4px;\npadding: 8px;\nmargin-bottom: 8px;';
+    case 'groupTitle':
+      return 'font-size: 13px;\nfont-weight: 700;\ncolor: #0b3c83;\nmargin: 0 0 6px 0;';
+    default:
+      return '';
+  }
+};
 
 export const createDefaultNodes = (prefix: string, sectionKey: SectionKey): Record<string, NodeStyleConfig> => {
   const p = `${prefix}-${sectionKey}`;
   const base: Record<string, NodeStyleConfig> = {
     root: {
       id: `${p}-section`,
-      className: `${prefix}-section ${prefix}-${sectionKey}-root`,
-      backgroundColor: '#ebf8ff',
-      borderColor: '#2b6cb0',
-      borderWidth: '1px',
-      borderStyle: 'solid',
-      borderRadius: '6px',
-      padding: '12px',
-      margin: '0 0 12px 0',
-      customCss: '',
+      className: `${prefix}-section ${p}-root`,
+      customCss: getDefaultNodeCss(sectionKey, 'root'),
     },
     header: {
       id: `${p}-header`,
-      className: `${prefix}-section-header`,
-      borderWidth: '0 0 3px 0',
-      borderStyle: 'solid',
-      borderColor: '#0b3c83',
-      padding: '0 0 6px 0',
-      margin: '0 0 10px 0',
-      customCss: '',
+      className: `${p}-header`,
+      customCss: getDefaultNodeCss(sectionKey, 'header'),
     },
     title: {
       id: `${p}-title`,
-      className: `${prefix}-section-title`,
-      fontSize: '18px',
-      fontWeight: '700',
-      color: '#0b3c83',
-      margin: '0',
-      customCss: '',
+      className: `${p}-title`,
+      customCss: getDefaultNodeCss(sectionKey, 'title'),
     },
     subtitle: {
       id: `${p}-subtitle`,
-      className: `${prefix}-section-subtitle`,
-      fontSize: '12px',
-      color: '#2b6cb0',
-      margin: '4px 0 0 0',
-      customCss: '',
+      className: `${p}-subtitle`,
+      customCss: getDefaultNodeCss(sectionKey, 'subtitle'),
     },
     content: {
       id: `${p}-content`,
-      className: `${prefix}-section-content`,
-      padding: '0',
-      margin: '0',
-      customCss: '',
+      className: `${p}-content`,
+      customCss: getDefaultNodeCss(sectionKey, 'content'),
     },
     item: {
       id: `${p}-item`,
-      className: `${prefix}-item ${prefix}-${sectionKey}-item`,
-      backgroundColor: '#ffffff',
-      borderRadius: '4px',
-      padding: '8px',
-      margin: '0',
-      borderWidth: '1px',
-      borderStyle: 'solid',
-      borderColor: '#e2e8f0',
-      customCss: '',
+      className: `${p}-item`,
+      customCss: getDefaultNodeCss(sectionKey, 'item'),
     },
     image: {
       id: `${p}-img`,
-      className: `${prefix}-item-image`,
-      width: '180px',
-      height: '90px',
-      borderRadius: '3px',
-      customCss: 'object-fit: cover;',
+      className: `${p}-img`,
+      customCss: getDefaultNodeCss(sectionKey, 'image'),
     },
     itemTitle: {
       id: `${p}-item-title`,
-      className: `${prefix}-item-title`,
-      fontSize: '13px',
-      fontWeight: '700',
-      color: '#2d3748',
-      backgroundColor: '#f7fafc',
-      padding: '4px 6px',
-      borderRadius: '3px',
-      borderWidth: '0',
-      borderColor: '#2b6cb0',
-      borderStyle: 'none',
-      textAlign: 'left',
-      customCss: '',
+      className: `${p}-item-title`,
+      customCss: getDefaultNodeCss(sectionKey, 'itemTitle'),
     },
     itemDesc: {
       id: `${p}-item-desc`,
-      className: `${prefix}-item-desc`,
-      fontSize: '12px',
-      color: '#4a5568',
-      margin: '4px 0 0 0',
-      customCss: 'line-height: 1.4;',
+      className: `${p}-item-desc`,
+      customCss: getDefaultNodeCss(sectionKey, 'itemDesc'),
     },
   };
 
   if (sectionKey === 'metadata') {
     base.root = {
       id: `${p}-banner`,
-      className: `${prefix}-main-header`,
-      backgroundColor: '#0b3c83',
-      color: '#ffffff',
-      padding: '16px 20px',
-      borderRadius: '6px',
-      textAlign: 'center',
-      borderWidth: '0',
-      borderColor: 'transparent',
-      borderStyle: 'none',
-      margin: '0 0 16px 0',
-      customCss: '',
+      className: `${prefix}-main-header ${p}-banner`,
+      customCss: getDefaultNodeCss('metadata', 'root'),
     };
     base.title = {
       id: `${p}-main-title`,
-      className: `${prefix}-main-title`,
-      fontSize: '22px',
-      fontWeight: '800',
-      color: '#ffffff',
-      margin: '0',
-      customCss: '',
+      className: `${p}-main-title`,
+      customCss: getDefaultNodeCss('metadata', 'title'),
     };
     base.subtitle = {
       id: `${p}-main-subtitle`,
-      className: `${prefix}-main-subtitle`,
-      fontSize: '14px',
-      color: '#bee3f8',
-      margin: '6px 0 0 0',
-      customCss: '',
+      className: `${p}-main-subtitle`,
+      customCss: getDefaultNodeCss('metadata', 'subtitle'),
     };
     base.date = {
       id: `${p}-main-date`,
-      className: `${prefix}-main-date`,
-      fontSize: '12px',
-      color: '#e2e8f0',
-      margin: '4px 0 0 0',
-      customCss: '',
+      className: `${p}-main-date`,
+      customCss: getDefaultNodeCss('metadata', 'date'),
     };
   }
 
   if (sectionKey === 'extended' || sectionKey === 'oceanWatch') {
     base.group = {
       id: `${p}-group`,
-      className: `${prefix}-group ${prefix}-${sectionKey}-group`,
-      backgroundColor: 'rgba(255, 255, 255, 0.6)',
-      borderWidth: '1px',
-      borderStyle: 'solid',
-      borderColor: '#cbd5e0',
-      borderRadius: '4px',
-      padding: '8px',
-      margin: '0 0 8px 0',
-      customCss: '',
+      className: `${p}-group`,
+      customCss: getDefaultNodeCss(sectionKey, 'group'),
     };
     base.groupTitle = {
       id: `${p}-group-title`,
-      className: `${prefix}-group-title`,
-      fontSize: '13px',
-      fontWeight: '700',
-      color: '#0b3c83',
-      margin: '0 0 6px 0',
-      customCss: '',
+      className: `${p}-group-title`,
+      customCss: getDefaultNodeCss(sectionKey, 'groupTitle'),
     };
   }
 
@@ -197,7 +183,6 @@ export const createTemplateConfig = (
     ALL_SECTION_KEYS.map((key) => [
       key,
       {
-        layout: defaultLayoutConfig(key),
         nodes: createDefaultNodes(prefix, key),
       },
     ])
@@ -220,19 +205,22 @@ export const BUILTIN_TEMPLATES: TemplateConfig[] = [
       'compact',
       true
     );
-    compact.sections.realized.layout.columns = 1;
-    compact.sections.realized.layout.columnWidths = '1fr';
-    compact.sections.keyMessages.layout.columns = 1;
-    compact.sections.keyMessages.layout.columnWidths = '1fr';
-    compact.sections.drivers.layout.columns = 1;
-    compact.sections.drivers.layout.columnWidths = '1fr';
-    compact.sections.sevenDay.layout.columns = 1;
-    compact.sections.sevenDay.layout.columnWidths = '1fr';
-    const imgNode = compact.sections.realized.nodes.image;
-    if (imgNode) {
-      imgNode.height = '70px';
-      imgNode.width = '120px';
+    if (compact.sections.realized.nodes.content) {
+      compact.sections.realized.nodes.content.customCss = 'display: grid;\ngrid-template-columns: 1fr;\ngap: 6px;';
     }
+    if (compact.sections.keyMessages.nodes.content) {
+      compact.sections.keyMessages.nodes.content.customCss = 'display: grid;\ngrid-template-columns: 1fr;\ngap: 6px;';
+    }
+    if (compact.sections.drivers.nodes.content) {
+      compact.sections.drivers.nodes.content.customCss = 'display: grid;\ngrid-template-columns: 1fr;\ngap: 6px;';
+    }
+    if (compact.sections.sevenDay.nodes.content) {
+      compact.sections.sevenDay.nodes.content.customCss = 'display: grid;\ngrid-template-columns: 1fr;\ngap: 6px;';
+    }
+    if (compact.sections.realized.nodes.image) {
+      compact.sections.realized.nodes.image.customCss = 'width: 120px;\nheight: 70px;\nborder-radius: 3px;\nobject-fit: cover;\nmargin-bottom: 4px;';
+    }
+    compact.globalCss = '/* Executive Compact Template Styles */\n.report-page {\n  font-size: 13px;\n}\n.report-section {\n  padding: 8px 10px;\n  margin-bottom: 8px;\n}';
     return compact;
   })(),
   (() => {
@@ -243,15 +231,16 @@ export const BUILTIN_TEMPLATES: TemplateConfig[] = [
       'wide',
       true
     );
-    wide.sections.realized.layout.columns = 3;
-    wide.sections.realized.layout.columnWidths = '1fr 1fr 1fr';
-    wide.sections.sevenDay.layout.columns = 3;
-    wide.sections.sevenDay.layout.columnWidths = '1fr 1fr 1fr';
-    const rootNode = wide.sections.realized.nodes.root;
-    if (rootNode) {
-      rootNode.backgroundColor = '#f7fafc';
-      rootNode.borderColor = '#4a5568';
+    if (wide.sections.realized.nodes.content) {
+      wide.sections.realized.nodes.content.customCss = 'display: grid;\ngrid-template-columns: repeat(3, minmax(0, 1fr));\ngap: 8px;';
     }
+    if (wide.sections.sevenDay.nodes.content) {
+      wide.sections.sevenDay.nodes.content.customCss = 'display: grid;\ngrid-template-columns: repeat(3, minmax(0, 1fr));\ngap: 8px;';
+    }
+    if (wide.sections.realized.nodes.root) {
+      wide.sections.realized.nodes.root.customCss = 'background-color: #f7fafc;\nborder: 1px solid #4a5568;\nborder-radius: 6px;\npadding: 12px;\nmargin-bottom: 12px;';
+    }
+    wide.globalCss = '/* Wide Infographic Grid Global Rules */\n.report-items {\n  gap: 12px;\n}';
     return wide;
   })(),
   (() => {
@@ -263,13 +252,18 @@ export const BUILTIN_TEMPLATES: TemplateConfig[] = [
       true
     );
     modern.pageBackground = '#f8fafc';
-    if (modern.sections.metadata.nodes.root) modern.sections.metadata.nodes.root.backgroundColor = '#1e1b4b';
-    if (modern.sections.metadata.nodes.title) modern.sections.metadata.nodes.title.color = '#38bdf8';
-    if (modern.sections.realized.nodes.root) {
-      modern.sections.realized.nodes.root.backgroundColor = '#ffffff';
-      modern.sections.realized.nodes.root.borderColor = '#6366f1';
+    if (modern.sections.metadata.nodes.root) {
+      modern.sections.metadata.nodes.root.customCss = 'background: #1e1b4b;\ncolor: #ffffff;\npadding: 18px 24px;\nborder-radius: 8px;\ntext-align: center;\nmargin-bottom: 16px;\nbox-shadow: 0 4px 12px rgba(30, 27, 75, 0.25);';
     }
-    if (modern.sections.realized.nodes.title) modern.sections.realized.nodes.title.color = '#4338ca';
+    if (modern.sections.metadata.nodes.title) {
+      modern.sections.metadata.nodes.title.customCss = 'font-size: 24px;\nfont-weight: 800;\ncolor: #38bdf8;\nmargin: 0;';
+    }
+    if (modern.sections.realized.nodes.root) {
+      modern.sections.realized.nodes.root.customCss = 'background-color: #ffffff;\nborder: 2px solid #6366f1;\nborder-radius: 8px;\npadding: 14px;\nmargin-bottom: 12px;\nbox-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);';
+    }
+    if (modern.sections.realized.nodes.title) {
+      modern.sections.realized.nodes.title.customCss = 'font-size: 18px;\nfont-weight: 700;\ncolor: #4338ca;\nmargin: 0;';
+    }
     return modern;
   })(),
 ];
@@ -364,8 +358,8 @@ export const SAMPLE_BULLETIN_DATA = {
     },
   ],
   logos: [
-    { title: 'RIMES Secretariat', image: 'https://picsum.photos/120/40?random=1' },
-    { title: 'SAHF Regional Hub', image: 'https://picsum.photos/120/40?random=2' },
-    { title: 'WMO Partner', image: 'https://picsum.photos/120/40?random=3' },
+    { title: 'RIMES Secretariat', name: 'RIMES Secretariat', image: 'https://picsum.photos/120/40?random=1', url: 'https://picsum.photos/120/40?random=1' },
+    { title: 'SAHF Regional Hub', name: 'SAHF Regional Hub', image: 'https://picsum.photos/120/40?random=2', url: 'https://picsum.photos/120/40?random=2' },
+    { title: 'WMO Partner', name: 'WMO Partner', image: 'https://picsum.photos/120/40?random=3', url: 'https://picsum.photos/120/40?random=3' },
   ],
 };

@@ -55,7 +55,7 @@
 
 .designer-studio-workspace {
   display: grid;
-  grid-template-columns: 280px 420px 1fr;
+  grid-template-columns: 280px 1fr;
   flex: 1;
   height: calc(100% - 65px);
   overflow: hidden;
@@ -275,50 +275,94 @@
   margin-bottom: 5px;
 }
 
-.tree-hierarchy-node.is-selected > .tree-children-container {
+.tree-hierarchy-node.is-selected>.tree-children-container {
   border-left-color: #3b82f6;
 }
 
-.tree-hierarchy-node.depth-1 > .tree-node-row {
+.tree-hierarchy-node.depth-1>.tree-node-row {
   border-left: 3px solid #3b82f6;
 }
 
-.tree-hierarchy-node.depth-2 > .tree-node-row {
+.tree-hierarchy-node.depth-2>.tree-node-row {
   border-left: 3px solid #10b981;
 }
 
-.tree-hierarchy-node.depth-3 > .tree-node-row {
+.tree-hierarchy-node.depth-3>.tree-node-row {
   border-left: 3px solid #f59e0b;
 }
 
-/* Center Column: Inspector */
-.designer-inspector-panel {
+/* Preview Workspace Wrapper holding Drawer + Live Preview */
+.designer-preview-workspace-wrapper {
+  display: flex;
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* CSS & Layout Drawer (left of Live Preview) */
+.designer-drawer-panel {
+  width: 380px;
+  min-width: 320px;
+  max-width: 440px;
   background-color: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  border-right: 1px solid #cbd5e1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  z-index: 5;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  animation: slideInLeft 0.18s ease-out;
 }
 
-.inspector-header {
-  padding: 14px 18px;
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.drawer-header {
+  padding: 12px 16px;
   border-bottom: 1px solid #e2e8f0;
   background-color: #f8fafc;
 }
 
-.inspector-header h3 {
-  font-size: 1rem;
-  margin: 0 0 4px;
-  color: #0f172a;
-}
-
-.inspector-scroll-area {
+.drawer-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+}
+
+.node-css-textarea {
+  font-family: 'Consolas', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  tab-size: 2;
+  resize: vertical;
+}
+
+.node-css-textarea:focus {
+  background-color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.btn-xs {
+  padding: 2px 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 .inspector-card {
@@ -341,69 +385,10 @@
   float: none;
 }
 
-/* Column Widths (fr) UI */
-.fr-preset-btn-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.fr-preset-btn {
-  font-size: 0.72rem;
-  padding: 2px 7px;
-  border-radius: 4px;
-  border: 1px solid #cbd5e1;
-  background-color: #f8fafc;
-  color: #334155;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: monospace;
-}
-
-.fr-preset-btn:hover {
-  background-color: #e2e8f0;
-  border-color: #94a3b8;
-}
-
-.fr-preset-btn.active {
-  background-color: #2563eb;
-  color: #ffffff;
-  border-color: #1d4ed8;
-  font-weight: 600;
-}
-
-.fr-track-bar-container {
-  display: flex;
-  height: 24px;
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid #cbd5e1;
-  background-color: #f1f5f9;
-  margin-top: 4px;
-}
-
-.fr-track-segment {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #ffffff;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  padding: 0 4px;
-  transition: width 0.2s ease;
-  border-right: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-.fr-track-segment:last-child {
-  border-right: none;
-}
-
-
-/* Right Column: Live Preview */
+/* Right Area: Live Preview */
 .designer-live-preview-panel {
+  flex: 1;
+  min-width: 0;
   background-color: #cbd5e1;
   display: flex;
   flex-direction: column;
@@ -439,11 +424,13 @@
   box-sizing: border-box;
 }
 
+/* Sections stack full width / whole row by default */
 .designer-preview-sections-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
   padding: 12px;
+  width: 100%;
 }
 
 /* ==========================================================================
@@ -483,9 +470,7 @@
   min-height: 80px;
   box-sizing: border-box;
   padding: 18px 24px;
-  color: #fff;
   text-align: center;
-  background: #0b3c83;
   cursor: pointer;
 }
 
@@ -508,17 +493,11 @@
   height: 100%;
   box-sizing: border-box;
   overflow: auto;
-  padding: 12px;
-  border: 1px solid #2b6cb0;
-  background: #ebf8ff;
-  border-radius: 4px;
   cursor: pointer;
 }
 
 .report-section-header {
-  margin-bottom: 10px;
-  padding-bottom: 7px;
-  border-bottom: 3px solid #0b3c83;
+  box-sizing: border-box;
 }
 
 .report-section-header h2,
@@ -557,55 +536,28 @@
 }
 
 .report-item-content {
-  min-width: 0;
-  width: 100%;
-  flex: 1;
-}
-
-.report-item-content h3,
-.report-item-content p {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.report-section-header h2 {
-  color: #0b3c83;
-  font-size: var(--report-title-size, 18px);
-}
-
-.report-section-header p {
-  margin-top: 4px;
-  width: 100%;
-  color: #2b6cb0;
-  font-size: var(--report-body-size, 12px);
+  display: contents;
 }
 
 .report-items {
   display: grid;
-  grid-template-columns: var(--report-grid-template-columns, repeat(var(--report-columns, 2), minmax(0, 1fr)));
   gap: 8px;
 }
 
 .report-ocean-group,
 .report-extended-group {
   min-width: 0;
-  padding: 8px;
-  background: rgb(255 255 255 / 55%);
-  border-radius: 4px;
-  margin-bottom: 8px;
+  box-sizing: border-box;
 }
 
-.report-ocean-group > h3,
-.report-extended-group > h3 {
+.report-ocean-group>h3,
+.report-extended-group>h3 {
   margin: 0 0 8px;
-  color: #0b3c83;
-  font-size: var(--report-body-size, 12px);
 }
 
-.report-extended-group > img {
+.report-extended-group>img {
   display: block;
-  width: min(100%, var(--report-image-width, 180px));
-  height: var(--report-image-height, 90px);
+  max-width: 100%;
   margin: 0 auto 8px;
   object-fit: cover;
 }
@@ -615,10 +567,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 8px;
-  background: #fff;
-  border-radius: 4px;
-  border: 1px solid #e2e8f0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .report-item-row {
@@ -629,35 +579,22 @@
 
 .report-item img {
   display: block;
-  width: min(100%, var(--report-image-width, 180px));
-  height: var(--report-image-height, 90px);
-  max-height: var(--report-image-height, 90px);
-  margin-bottom: 6px;
   object-fit: cover;
-  align-self: center;
-  border-radius: 3px;
+  max-width: 100%;
 }
 
 .report-item-row img {
-  width: min(38%, var(--report-image-width, 180px));
-  flex: 0 0 min(38%, var(--report-image-width, 180px));
-  max-width: var(--report-image-width, 180px);
+  width: min(38%, 180px);
+  flex: 0 0 min(38%, 180px);
+  max-width: 180px;
   margin-bottom: 0;
 }
 
 .report-item h3,
-.report-item p {
+.report-item p,
+.report-item span {
+  box-sizing: border-box;
   margin: 0;
-}
-
-.report-item h3 {
-  padding: 4px;
-  text-align: var(--report-item-title-align, left);
-  color: var(--report-item-title-color, #2d3748);
-  background: var(--report-item-title-background, #fff);
-  border: var(--report-item-title-border-width, 0px) solid var(--report-item-title-border-color, #2b6cb0);
-  border-radius: var(--report-item-title-border-radius, 0px);
-  font-size: var(--report-body-size, 13px);
 }
 
 .report-section-oceanWatch .report-ocean-group,
@@ -674,19 +611,21 @@
 }
 
 .report-section-logos .report-item {
-  align-items: center;
-  text-align: center;
-  border: none;
-  background: transparent;
+  width: auto;
+  min-width: auto;
+  max-width: 100%;
+  flex: 0 0 auto;
 }
 
-.report-item p,
+.report-section-logos .report-item img {
+  max-height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
 .report-empty {
-  font-size: var(--report-body-size, 12px);
+  font-size: 12px;
   line-height: 1.35;
-}
-
-.report-empty {
   grid-column: 1 / -1;
   margin: 0;
 }
@@ -734,6 +673,7 @@
   .designer-studio-workspace {
     grid-template-columns: 240px 1fr;
   }
+
   .designer-live-preview-panel {
     display: none;
   }

@@ -1,11 +1,149 @@
 import {
   type TemplateConfig,
   type NodeStyleConfig,
+  type SectionKey,
+  type SectionTemplateConfig,
   TEMPLATES_STORAGE_KEY,
   ALL_SECTION_KEYS,
   SECTION_NAMES,
 } from './types';
-import { BUILTIN_TEMPLATES } from './templatePresets';
+import { BUILTIN_TEMPLATES, getDefaultNodeCss } from './templatePresets';
+
+export const generateFullTemplateCss = (template: TemplateConfig): string => {
+  const sections: string[] = [];
+
+  // 1. Page level rules
+  sections.push(`/* ==========================================================================
+   Page & Canvas Styles
+   ========================================================================== */
+.report-page {
+  background-color: ${template.pageBackground || '#ffffff'};
+  font-family: ${template.pageFontFamily || 'Arial, sans-serif'};
+  color: ${template.pageTextColor || '#2d3748'};
+}`);
+
+  // 2. Section and Node rules
+  ALL_SECTION_KEYS.forEach((sectionKey) => {
+    const sec = template.sections[sectionKey];
+    if (!sec || !sec.nodes) return;
+
+    const nodeBlocks: string[] = [];
+    nodeBlocks.push(`/* ==========================================================================
+   Section: ${SECTION_NAMES[sectionKey]}
+   ========================================================================== */`);
+
+    Object.entries(sec.nodes).forEach(([nodeKey, node]) => {
+      const cleanId =
+        node.id && node.id.trim()
+          ? node.id.trim()
+          : `${template.id}-${sectionKey}-${nodeKey}`;
+      const defaultCss = getDefaultNodeCss(sectionKey, nodeKey);
+      let rawCss = '';
+      if (node.customCss !== undefined && node.customCss !== '') {
+        rawCss = node.customCss.trim();
+      } else if (
+        node.fontSize ||
+        node.fontWeight ||
+        node.fontFamily ||
+        node.color ||
+        node.backgroundColor ||
+        node.textAlign ||
+        node.padding ||
+        node.margin ||
+        node.borderWidth ||
+        node.borderStyle ||
+        node.borderColor ||
+        node.borderRadius ||
+        node.boxShadow ||
+        node.width ||
+        node.height
+      ) {
+        const compiled = compileNodeStylesToCss(`#${cleanId}`, node);
+        const inner = compiled
+          .replace(/^#\S+\s*\{\s*/, '')
+          .replace(/\s*\}\s*$/, '');
+        rawCss = inner.trim();
+      } else {
+        rawCss = defaultCss;
+      }
+
+      const lines: string[] = [];
+      if (node.hidden) {
+        lines.push('display: none !important;');
+      }
+      if (rawCss && rawCss.trim()) {
+        lines.push(rawCss.trim());
+      }
+
+      if (lines.length > 0) {
+        nodeBlocks.push(`#${cleanId} {\n  ${lines.join('\n  ')}\n}`);
+      }
+    });
+
+    if (nodeBlocks.length > 1) {
+      sections.push(nodeBlocks.join('\n\n'));
+    }
+  });
+
+  return sections.join('\n\n');
+};
+
+export const updateCssBlockForId = (
+  css: string,
+  id: string,
+  newDeclarations: string
+): string => {
+  if (!css) {
+    return `#${id} {\n  ${newDeclarations.trim().split('\n').join('\n  ')}\n}`;
+  }
+  const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(#${escapedId}\\b[^{]*\\{)([^}]*)(\\})`, 'm');
+  const formattedDecls = newDeclarations.trim()
+    ? `\n  ${newDeclarations.trim().split('\n').join('\n  ')}\n`
+    : '\n';
+  if (regex.test(css)) {
+    return css.replace(regex, `$1${formattedDecls}$3`);
+  } else {
+    return `${css.trim()}\n\n#${id} {\n  ${newDeclarations.trim().split('\n').join('\n  ')}\n}`;
+  }
+};
+
+export const updateCssIdSelector = (
+  css: string,
+  oldId: string,
+  newId: string
+): string => {
+  if (!css || !oldId || !newId || oldId === newId) return css;
+  const escapedOld = oldId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`#${escapedOld}\\b`, 'g');
+  return css.replace(regex, `#${newId}`);
+};
+
+export const syncGlobalCssToNodes = (
+  globalCss: string,
+  sections: Record<SectionKey, SectionTemplateConfig>
+): Record<SectionKey, SectionTemplateConfig> => {
+  const nextSections = JSON.parse(JSON.stringify(sections)) as Record<
+    SectionKey,
+    SectionTemplateConfig
+  >;
+  const blockRegex = /#([a-zA-Z0-9_-]+)\s*\{([^}]+)\}/g;
+  let match: RegExpExecArray | null;
+  while ((match = blockRegex.exec(globalCss)) !== null) {
+    const id = match[1];
+    const body = match[2]?.trim() || '';
+    for (const secKey of ALL_SECTION_KEYS) {
+      const sec = nextSections[secKey];
+      if (!sec || !sec.nodes) continue;
+      for (const node of Object.values(sec.nodes)) {
+        if (node && (node as NodeStyleConfig).id === id) {
+          (node as NodeStyleConfig).customCss = body;
+        }
+      }
+    }
+  }
+  return nextSections;
+};
 
 export const loadAllTemplates = (): TemplateConfig[] => {
   try {
@@ -20,6 +158,25 @@ export const loadAllTemplates = (): TemplateConfig[] => {
         combined.push(custom);
       }
     });
+
+    // Ensure all templates have complete globalCss containing all node rules
+    combined.forEach((template) => {
+      ALL_SECTION_KEYS.forEach((sectionKey) => {
+        const sec = template.sections[sectionKey];
+        if (sec && sec.nodes) {
+          Object.entries(sec.nodes).forEach(([nodeKey, node]) => {
+            if (node && (node.customCss === undefined || node.customCss === '')) {
+              node.customCss = getDefaultNodeCss(sectionKey, nodeKey);
+            }
+          });
+        }
+      });
+
+      if (!template.globalCss || !template.globalCss.includes('#')) {
+        template.globalCss = generateFullTemplateCss(template);
+      }
+    });
+
     return combined;
   } catch {
     return BUILTIN_TEMPLATES;
@@ -53,108 +210,53 @@ export const deleteTemplate = (templateId: string): void => {
   }
 };
 
+export const resetTemplateToBuiltin = (templateId: string): TemplateConfig | null => {
+  const builtin = BUILTIN_TEMPLATES.find((t) => t.id === templateId);
+  if (!builtin) return null;
+  saveTemplate(builtin);
+  return JSON.parse(JSON.stringify(builtin));
+};
+
+export const resetAllTemplatesToDefault = (): TemplateConfig[] => {
+  localStorage.setItem(TEMPLATES_STORAGE_KEY, JSON.stringify(BUILTIN_TEMPLATES));
+  return JSON.parse(JSON.stringify(BUILTIN_TEMPLATES));
+};
+
 export const compileNodeStylesToCss = (selector: string, node?: NodeStyleConfig): string => {
   if (!node) return '';
   const lines: string[] = [];
   if (node.hidden) {
     lines.push('display: none !important;');
   }
-  if (node.fontSize) lines.push(`font-size: ${node.fontSize};`);
-  if (node.fontWeight) lines.push(`font-weight: ${node.fontWeight};`);
-  if (node.fontFamily) lines.push(`font-family: ${node.fontFamily};`);
-  if (node.color) lines.push(`color: ${node.color};`);
-  if (node.backgroundColor) lines.push(`background-color: ${node.backgroundColor};`);
-  if (node.textAlign) lines.push(`text-align: ${node.textAlign};`);
-  if (node.padding) lines.push(`padding: ${node.padding};`);
-  if (node.margin) lines.push(`margin: ${node.margin};`);
-  if (node.borderWidth) lines.push(`border-width: ${node.borderWidth};`);
-  if (node.borderStyle) lines.push(`border-style: ${node.borderStyle};`);
-  if (node.borderColor) lines.push(`border-color: ${node.borderColor};`);
-  if (node.borderRadius) lines.push(`border-radius: ${node.borderRadius};`);
-  if (node.boxShadow) lines.push(`box-shadow: ${node.boxShadow};`);
-  if (node.width) lines.push(`width: ${node.width}; max-width: ${node.width};`);
-  if (node.height) lines.push(`height: ${node.height};`);
-  if (node.customCss) lines.push(node.customCss.trim());
+
+  if (node.customCss && node.customCss.trim()) {
+    lines.push(node.customCss.trim());
+  } else {
+    if (node.fontSize) lines.push(`font-size: ${node.fontSize};`);
+    if (node.fontWeight) lines.push(`font-weight: ${node.fontWeight};`);
+    if (node.fontFamily) lines.push(`font-family: ${node.fontFamily};`);
+    if (node.color) lines.push(`color: ${node.color};`);
+    if (node.backgroundColor) lines.push(`background-color: ${node.backgroundColor};`);
+    if (node.textAlign) lines.push(`text-align: ${node.textAlign};`);
+    if (node.padding) lines.push(`padding: ${node.padding};`);
+    if (node.margin) lines.push(`margin: ${node.margin};`);
+    if (node.borderWidth) lines.push(`border-width: ${node.borderWidth};`);
+    if (node.borderStyle) lines.push(`border-style: ${node.borderStyle};`);
+    if (node.borderColor) lines.push(`border-color: ${node.borderColor};`);
+    if (node.borderRadius) lines.push(`border-radius: ${node.borderRadius};`);
+    if (node.boxShadow) lines.push(`box-shadow: ${node.boxShadow};`);
+    if (node.width) lines.push(`width: ${node.width}; max-width: ${node.width};`);
+    if (node.height) lines.push(`height: ${node.height};`);
+  }
 
   if (!lines.length) return '';
   return `${selector} {\n  ${lines.join('\n  ')}\n}`;
 };
 
 export const generateTemplateCss = (template: TemplateConfig): string => {
-  const chunks: string[] = [];
-
-  // Page level rules
-  chunks.push(`/* Page Styles: ${template.name} */`);
-  chunks.push(`.report-page {
-  background-color: ${template.pageBackground || '#ffffff'};
-  font-family: ${template.pageFontFamily || 'Arial, sans-serif'};
-  color: ${template.pageTextColor || '#2d3748'};
-}`);
-
-  // Global custom CSS
-  if (template.globalCss && template.globalCss.trim()) {
-    chunks.push(`/* Global Custom CSS */\n${template.globalCss.trim()}`);
+  if (template.globalCss && template.globalCss.trim().includes('{')) {
+    return template.globalCss.trim();
   }
-
-  // Section and Node rules
-  ALL_SECTION_KEYS.forEach((sectionKey) => {
-    const sec = template.sections[sectionKey];
-    if (!sec || !sec.nodes) return;
-
-    chunks.push(`\n/* Section: ${SECTION_NAMES[sectionKey]} */`);
-
-    // CSS variables for dynamic layout
-    const rootNode = sec.nodes.root;
-    const imgNode = sec.nodes.image;
-    const titleNode = sec.nodes.title;
-    const itemTitleNode = sec.nodes.itemTitle;
-    const itemDescNode = sec.nodes.itemDesc;
-
-    if (rootNode) {
-      const vars: string[] = [];
-      if (imgNode?.width) vars.push(`--report-image-width: ${imgNode.width};`);
-      if (imgNode?.height) vars.push(`--report-image-height: ${imgNode.height};`);
-      if (titleNode?.fontSize) vars.push(`--report-title-size: ${titleNode.fontSize};`);
-      if (itemDescNode?.fontSize) vars.push(`--report-body-size: ${itemDescNode.fontSize};`);
-      if (itemTitleNode?.textAlign) vars.push(`--report-item-title-align: ${itemTitleNode.textAlign};`);
-      if (itemTitleNode?.backgroundColor) vars.push(`--report-item-title-background: ${itemTitleNode.backgroundColor};`);
-      if (itemTitleNode?.color) vars.push(`--report-item-title-color: ${itemTitleNode.color};`);
-      if (itemTitleNode?.borderColor) vars.push(`--report-item-title-border-color: ${itemTitleNode.borderColor};`);
-      if (itemTitleNode?.borderWidth) vars.push(`--report-item-title-border-width: ${itemTitleNode.borderWidth};`);
-      if (itemTitleNode?.borderRadius) vars.push(`--report-item-title-border-radius: ${itemTitleNode.borderRadius};`);
-      if (sec.layout.columnWidths) {
-        vars.push(`--report-grid-template-columns: ${sec.layout.columnWidths};`);
-      }
-      vars.push(`--report-columns: ${sec.layout.columns || 2};`);
-
-      if (vars.length && rootNode.id) {
-        chunks.push(`#${rootNode.id} {\n  ${vars.join('\n  ')}\n}`);
-      }
-    }
-
-    // Node selectors by ID, prefix, and Class
-    Object.entries(sec.nodes).forEach(([, node]) => {
-      if (!node) return;
-      const selectors: string[] = [];
-      if (node.id && node.id.trim()) {
-        const cleanId = node.id.trim();
-        selectors.push(`#${cleanId}`);
-        selectors.push(`[id^="${cleanId}-"]`);
-      }
-      if (node.className && node.className.trim()) {
-        const classNames = node.className.trim().split(/\s+/).filter(Boolean);
-        classNames.forEach((cls) => {
-          selectors.push(`.${cls}`);
-        });
-      }
-
-      if (selectors.length) {
-        const uniqueSelectors = Array.from(new Set(selectors)).join(',\n');
-        const css = compileNodeStylesToCss(uniqueSelectors, node);
-        if (css) chunks.push(css);
-      }
-    });
-  });
-
-  return chunks.join('\n\n');
+  return generateFullTemplateCss(template);
 };
+

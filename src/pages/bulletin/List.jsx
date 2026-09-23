@@ -9,6 +9,16 @@ const REPORT_SOURCE_KEY = 'bulletin:report-source';
 const REPORT_LAYOUT_PREFIX = 'bulletin:report-layout:';
 const TEMPLATES_STORAGE_KEY = 'bulletin:saved-templates';
 
+const TEMPLATE_MAP_KEY = 'bulletin:template-map';
+
+const readTemplateMap = () => {
+  try {
+    return JSON.parse(localStorage.getItem(TEMPLATE_MAP_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
+
 const getBulletinKeys = () =>
   Object.keys(localStorage).filter(
     (key) =>
@@ -16,12 +26,13 @@ const getBulletinKeys = () =>
       key !== REPORT_SOURCE_KEY &&
       key !== ACTIVE_TEMPLATE_KEY &&
       key !== TEMPLATES_STORAGE_KEY &&
+      key !== TEMPLATE_MAP_KEY &&
       !key.startsWith(REPORT_LAYOUT_PREFIX)
   );
 
 const List = () => {
   const [items, setItems] = useState([]);
-  const [templates, setTemplates] = useState({});
+  const [templates, setTemplates] = useState(readTemplateMap);
   const [availableTemplates, setAvailableTemplates] = useState(loadAllTemplates);
   const navigate = useNavigate();
 
@@ -36,6 +47,15 @@ const List = () => {
       }
     });
     setItems(list);
+
+    const savedMap = readTemplateMap();
+    const map = { ...savedMap };
+    list.forEach((it) => {
+      if (it.payload && it.payload.templateId && !map[it.key]) {
+        map[it.key] = it.payload.templateId;
+      }
+    });
+    setTemplates(map);
   }, []);
 
   const reload = () => {
@@ -49,6 +69,27 @@ const List = () => {
       }
     });
     setItems(list);
+
+    const savedMap = readTemplateMap();
+    const map = { ...savedMap };
+    list.forEach((it) => {
+      if (it.payload && it.payload.templateId && !map[it.key]) {
+        map[it.key] = it.payload.templateId;
+      }
+    });
+    setTemplates(map);
+  };
+
+  const handleTemplateChange = (key, templateId) => {
+    setTemplates((prev) => {
+      const next = { ...prev, [key]: templateId };
+      try {
+        localStorage.setItem(TEMPLATE_MAP_KEY, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
   };
 
   const handleLoad = (key) => {
@@ -84,7 +125,7 @@ const List = () => {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div>
           <h1>Bulletins</h1>
-          <p className="text-muted small mb-0">Manage saved bulletins and generate styled reports using design templates</p>
+          <p className="text-muted small mb-0">Manage bulletins </p>
         </div>
         <div className="d-flex gap-2">
           <button className="btn btn-outline-primary" onClick={() => navigate('/app/bulletin/designer')}>
@@ -151,12 +192,7 @@ const List = () => {
                       <select
                         className="form-select form-select-sm"
                         value={templates[it.key] || defaultTemplateId}
-                        onChange={(event) =>
-                          setTemplates((previous) => ({
-                            ...previous,
-                            [it.key]: event.target.value,
-                          }))
-                        }
+                        onChange={(event) => handleTemplateChange(it.key, event.target.value)}
                       >
                         {availableTemplates.map((template) => (
                           <option key={template.id} value={template.id}>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import s from './Bulletin.module.scss';
 import { getImages } from '../../services/imageService';
 import { toast } from 'react-toastify';
@@ -37,6 +38,7 @@ const readDraft = () => {
 };
 
 const Bulletin = () => {
+  const navigate = useNavigate();
   const [draft] = useState(readDraft);
   const initialSectionTitles = {
     ...DEFAULT_SECTION_TITLES,
@@ -70,6 +72,26 @@ const Bulletin = () => {
     } catch (err) {
       toast.error('Failed to save bulletin');
     }
+  };
+
+  const handleViewReport = () => {
+    const payload = {
+      meta,
+      realized,
+      keyMessages,
+      driversTitle: sectionTitles.drivers,
+      drivers,
+      sevenDay,
+      extended,
+      oceanWatch,
+      logos,
+      sectionTitles,
+      sectionSubtitles,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    localStorage.setItem('bulletin:report-source', JSON.stringify({ sourceKey: STORAGE_KEY }));
+    navigate('/app/bulletin/report');
   };
 
   const toggleSection = (key) => {
@@ -129,7 +151,23 @@ const Bulletin = () => {
 
   return (
     <div className={s.root}>
-      <h1>Create Bulletin</h1>
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+          <h1 className="mb-0">Create / Edit Bulletin</h1>
+          {/* <p className="text-muted small mb-0">Fill out bulletin sections below and generate/preview the styled report</p> */}
+        </div>
+        <div className="d-flex gap-2 align-items-center">
+          <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/app/bulletin/list')}>
+            📋 All Bulletins
+          </button>
+          <button type="button" className="btn btn-outline-primary" onClick={handleViewReport}>
+            📊 View Report
+          </button>
+          <button type="button" className="btn btn-success" onClick={saveBulletin}>
+            💾 Save Bulletin
+          </button>
+        </div>
+      </div>
 
       {/* <BulletinNavigator
         sections={[
@@ -233,8 +271,10 @@ const Bulletin = () => {
         </div>
       </section>
 
-      <div className="mt-4">
-        <button className="btn btn-success" onClick={saveBulletin}>Save</button>
+      <div className="mt-4 d-flex gap-2 align-items-center">
+        <button type="button" className="btn btn-success" onClick={saveBulletin}>💾 Save Bulletin</button>
+        <button type="button" className="btn btn-outline-primary" onClick={handleViewReport}>📊 View Report</button>
+        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/app/bulletin/list')}>📋 All Bulletins</button>
       </div>
 
       <div className={s.floatingNav}>

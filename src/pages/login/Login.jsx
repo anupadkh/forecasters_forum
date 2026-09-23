@@ -50,7 +50,7 @@ const Login = () => {
     <div className={s.root}>
       <Row>
         <Col xs={{ size: 10, offset: 1 }} sm={{ size: 6, offset: 3 }} lg={{ size: 4, offset: 4 }}>
-          <p className="text-center">React Dashboard</p>
+          <p className="text-center">Forecasters Forum</p>
           <Widget className={s.widget}>
             <h4 className="mt-0">Login to your workspace</h4>
             <p className="fs-sm text-muted">

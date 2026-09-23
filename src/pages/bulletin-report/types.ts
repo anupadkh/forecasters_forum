@@ -71,15 +71,7 @@ export type NodeStyleConfig = {
   customCss?: string;
 };
 
-export type SectionLayoutConfig = {
-  direction: 'row' | 'column';
-  columns: number;
-  columnWidths?: string;
-  numbered: boolean;
-};
-
 export type SectionTemplateConfig = {
-  layout: SectionLayoutConfig;
   nodes: Record<string, NodeStyleConfig>;
 };
 
@@ -133,7 +125,7 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
       },
       {
         key: 'content',
-        label: 'Content Grid Flow',
+        label: 'Section Content Container',
         role: 'Child Branch',
         tag: '<div>',
         children: [
@@ -143,8 +135,8 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
             role: 'Child Card',
             tag: '<div>',
             children: [
-              { key: 'image', label: 'Weather Image', role: 'Sibling 1', tag: '<img>' },
-              { key: 'itemTitle', label: 'Item Title', role: 'Sibling 2', tag: '<h3>' },
+              { key: 'itemTitle', label: 'Item Title', role: 'Sibling 1', tag: '<h3>' },
+              { key: 'image', label: 'Weather Image', role: 'Sibling 2', tag: '<img>' },
               { key: 'itemDesc', label: 'Item Description', role: 'Sibling 3', tag: '<p>' },
             ],
           },
@@ -170,7 +162,7 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
       },
       {
         key: 'content',
-        label: 'Content Grid Flow',
+        label: 'Section Content Container',
         role: 'Child Branch',
         tag: '<div>',
         children: [
@@ -206,7 +198,7 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
       },
       {
         key: 'content',
-        label: 'Content Grid Flow',
+        label: 'Section Content Container',
         role: 'Child Branch',
         tag: '<div>',
         children: [
@@ -242,7 +234,7 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
       },
       {
         key: 'content',
-        label: 'Content Grid Flow',
+        label: 'Section Content Container',
         role: 'Child Branch',
         tag: '<div>',
         children: [
@@ -252,8 +244,8 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
             role: 'Child Card',
             tag: '<div>',
             children: [
-              { key: 'image', label: 'Card Image', role: 'Sibling 1', tag: '<img>' },
-              { key: 'itemTitle', label: 'Country Title', role: 'Sibling 2', tag: '<h3>' },
+              { key: 'itemTitle', label: 'Country Title', role: 'Sibling 1', tag: '<h3>' },
+              { key: 'image', label: 'Card Image', role: 'Sibling 2', tag: '<img>' },
               { key: 'itemDesc', label: 'Forecast Desc', role: 'Sibling 3', tag: '<p>' },
             ],
           },
@@ -279,7 +271,7 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
       },
       {
         key: 'content',
-        label: 'Content Flow Container',
+        label: 'Section Content Container',
         role: 'Child Branch',
         tag: '<div>',
         children: [
@@ -317,7 +309,7 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
       },
       {
         key: 'content',
-        label: 'Content Flow Container',
+        label: 'Section Content Container',
         role: 'Child Branch',
         tag: '<div>',
         children: [
@@ -362,7 +354,7 @@ export const SECTION_TREE_HIERARCHIES: Record<SectionKey, TreeNodeDef> = {
       },
       {
         key: 'content',
-        label: 'Logos Grid Flow',
+        label: 'Section Content Container',
         role: 'Child Branch',
         tag: '<div>',
         children: [

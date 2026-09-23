@@ -12,7 +12,6 @@ import {
   type SectionKey,
   type TemplateConfig,
   type NodeStyleConfig,
-  type SectionLayoutConfig,
   TEMPLATES_STORAGE_KEY,
   ACTIVE_TEMPLATE_KEY,
   REPORT_SOURCE_KEY,
@@ -23,7 +22,13 @@ import {
   loadAllTemplates,
   saveTemplate,
   deleteTemplate,
+  resetTemplateToBuiltin,
+  resetAllTemplatesToDefault,
   generateTemplateCss,
+  generateFullTemplateCss,
+  updateCssBlockForId,
+  updateCssIdSelector,
+  syncGlobalCssToNodes,
 } from './templateStore';
 
 import './grid.css';
@@ -53,6 +58,8 @@ export default function Designer() {
   );
   const [selectedSectionKey, setSelectedSectionKey] = useState<SectionKey>('realized');
   const [selectedNodeKey, setSelectedNodeKey] = useState<string>('itemTitle');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
+  const [drawerTab, setDrawerTab] = useState<'node' | 'global'>('node');
   const [previewWithDraft, setPreviewWithDraft] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -62,7 +69,11 @@ export default function Designer() {
       allTemplates.find((entry) => entry.id === activeTemplateId) ||
       allTemplates[0] ||
       (BUILTIN_TEMPLATES[0] as TemplateConfig);
-    setCurrentTemplate(JSON.parse(JSON.stringify(t)));
+    const cloned = JSON.parse(JSON.stringify(t)) as TemplateConfig;
+    if (!cloned.globalCss || !cloned.globalCss.includes('#')) {
+      cloned.globalCss = generateFullTemplateCss(cloned);
+    }
+    setCurrentTemplate(cloned);
   }, [activeTemplateId, allTemplates]);
 
   // Read draft data if requested
@@ -99,43 +110,75 @@ export default function Designer() {
   const handleUpdateNode = useCallback(
     (field: keyof NodeStyleConfig, value: any) => {
       setCurrentTemplate((prev) => {
-        const next = { ...prev };
+        const next = JSON.parse(JSON.stringify(prev)) as TemplateConfig;
+        if (!next.globalCss || !next.globalCss.includes('#')) {
+          next.globalCss = generateFullTemplateCss(next);
+        }
         const sec = next.sections[selectedSectionKey];
         if (!sec) return prev;
-        const currentNode = sec.nodes[selectedNodeKey] || { id: '', className: '' };
-        sec.nodes = {
-          ...sec.nodes,
-          [selectedNodeKey]: {
-            ...currentNode,
-            [field]: value,
-          },
+        const currentNode = sec.nodes[selectedNodeKey] || { id: '', className: '', customCss: '' };
+        const oldId = currentNode.id;
+        sec.nodes[selectedNodeKey] = {
+          ...currentNode,
+          [field]: value,
         };
+
+        // If ID changed, update selector in globalCss
+        if (field === 'id') {
+          const newId = String(value || '').trim();
+          if (oldId && newId && oldId !== newId) {
+            next.globalCss = updateCssIdSelector(next.globalCss, oldId, newId);
+          }
+        }
+
+        // If customCss or hidden changed, update the CSS block in globalCss
+        if (field === 'customCss' || field === 'hidden') {
+          const targetId = sec.nodes[selectedNodeKey]?.id || selectedNodeKey;
+          const newCss = field === 'customCss' ? value : sec.nodes[selectedNodeKey]?.customCss || '';
+          const isHidden =
+            field === 'hidden' ? Boolean(value) : Boolean(sec.nodes[selectedNodeKey]?.hidden);
+          const fullBody = isHidden ? `display: none !important;\n${newCss}` : newCss;
+          next.globalCss = updateCssBlockForId(next.globalCss, targetId, fullBody);
+        }
+
         return next;
       });
     },
     [selectedSectionKey, selectedNodeKey]
   );
 
-  const handleUpdateSectionLayout = useCallback(
-    <K extends keyof SectionLayoutConfig>(field: K, value: SectionLayoutConfig[K]) => {
-      setCurrentTemplate((prev) => {
-        const next = { ...prev };
-        const sec = next.sections[selectedSectionKey];
-        if (!sec) return prev;
-        sec.layout = {
-          ...sec.layout,
-          [field]: value,
-        };
-        return next;
-      });
-    },
-    [selectedSectionKey]
-  );
+  const handleUpdateGlobalCss = useCallback((newGlobalCss: string) => {
+    setCurrentTemplate((prev) => {
+      const next = { ...prev, globalCss: newGlobalCss };
+      next.sections = syncGlobalCssToNodes(newGlobalCss, next.sections);
+      return next;
+    });
+  }, []);
 
   const handleSelectNode = useCallback((sectionKey: SectionKey, nodeKey: string) => {
     setSelectedSectionKey(sectionKey);
     setSelectedNodeKey(nodeKey);
+    setDrawerTab('node');
+    setIsDrawerOpen(true);
   }, []);
+
+  const handleOpenGlobalCss = useCallback(() => {
+    if (isDrawerOpen && drawerTab === 'global') {
+      setIsDrawerOpen(false);
+    } else {
+      setDrawerTab('global');
+      setIsDrawerOpen(true);
+    }
+  }, [isDrawerOpen, drawerTab]);
+
+  const handleOpenNodeCss = useCallback(() => {
+    if (isDrawerOpen && drawerTab === 'node') {
+      setIsDrawerOpen(false);
+    } else {
+      setDrawerTab('node');
+      setIsDrawerOpen(true);
+    }
+  }, [isDrawerOpen, drawerTab]);
 
   const handleSaveCurrentTemplate = () => {
     setIsSaving(true);
@@ -189,6 +232,17 @@ export default function Designer() {
     toast.info('Template deleted');
   };
 
+  const handleResetToBuiltin = () => {
+    if (window.confirm(`Reset template "${currentTemplate.name}" back to original defaults?`)) {
+      const reset =
+        resetTemplateToBuiltin(currentTemplate.id) ||
+        (BUILTIN_TEMPLATES[0] as TemplateConfig);
+      setCurrentTemplate(JSON.parse(JSON.stringify(reset)));
+      setAllTemplates(loadAllTemplates());
+      toast.info('Template reset to default presets');
+    }
+  };
+
   return (
     <div className="designer-page-container">
       {/* Injected Live Template CSS */}
@@ -198,9 +252,9 @@ export default function Designer() {
       <header className="designer-header-bar">
         <div className="designer-title-group">
           <h1>Design Template Studio</h1>
-          <p className="text-muted small mb-0">
-            Customize IDs, classes, and node-level CSS rules for Bulletin sections
-          </p>
+          {/* <p className="text-muted small mb-0">
+            Customize IDs, classes, and localized & global CSS rules for Bulletin sections
+          </p> */}
         </div>
 
         <div className="designer-actions-toolbar">
@@ -248,6 +302,17 @@ export default function Designer() {
             ➕ Save As New
           </button>
 
+          {currentTemplate.isBuiltIn && (
+            <button
+              type="button"
+              className="btn btn-sm btn-outline-secondary"
+              onClick={handleResetToBuiltin}
+              title="Reset this built-in template to its default styles"
+            >
+              ↺ Reset Defaults
+            </button>
+          )}
+
           {!currentTemplate.isBuiltIn && (
             <button
               type="button"
@@ -257,6 +322,29 @@ export default function Designer() {
               🗑️ Delete
             </button>
           )}
+
+          {/* Direct Header Buttons for Node CSS & Global Template CSS */}
+          <button
+            type="button"
+            className={`btn btn-sm ${
+              isDrawerOpen && drawerTab === 'node' ? 'btn-primary' : 'btn-outline-primary'
+            }`}
+            onClick={handleOpenNodeCss}
+            title="Open Localized Node CSS Editor"
+          >
+            🎨 Localized Node CSS
+          </button>
+
+          <button
+            type="button"
+            className={`btn btn-sm ${
+              isDrawerOpen && drawerTab === 'global' ? 'btn-primary' : 'btn-outline-primary'
+            }`}
+            onClick={handleOpenGlobalCss}
+            title="Open Global Template CSS Stylesheet"
+          >
+            🌐 Global Template CSS
+          </button>
 
           <button
             type="button"
@@ -271,6 +359,8 @@ export default function Designer() {
             type="button"
             className="btn btn-sm btn-success"
             onClick={() => {
+              saveTemplate(currentTemplate);
+              localStorage.setItem(ACTIVE_TEMPLATE_KEY, currentTemplate.id);
               localStorage.setItem(
                 REPORT_SOURCE_KEY,
                 JSON.stringify({ templateId: currentTemplate.id })
@@ -283,7 +373,7 @@ export default function Designer() {
         </div>
       </header>
 
-      {/* Main Studio Body: 3-column modular layout */}
+      {/* Main Studio Body: 2-column layout (Tree Explorer + Preview Area with Drawer) */}
       <div className="designer-studio-workspace">
         {/* Left Column: Tree Explorer */}
         <TreeExplorer
@@ -293,22 +383,28 @@ export default function Designer() {
           onSelectNode={handleSelectNode}
         />
 
-        {/* Center Column: Node Inspector & Style Controls */}
-        <NodeInspector
-          template={currentTemplate}
-          selectedSectionKey={selectedSectionKey}
-          selectedNodeKey={selectedNodeKey}
-          onUpdateNode={handleUpdateNode}
-          onUpdateSectionLayout={handleUpdateSectionLayout}
-          onUpdateTemplate={setCurrentTemplate}
-        />
+        {/* Right Area: Preview Workspace with CSS Drawer immediately left of preview */}
+        <div className="designer-preview-workspace-wrapper">
+          {isDrawerOpen && (
+            <NodeInspector
+              template={currentTemplate}
+              selectedSectionKey={selectedSectionKey}
+              selectedNodeKey={selectedNodeKey}
+              activeTab={drawerTab}
+              onTabChange={setDrawerTab}
+              onUpdateNode={handleUpdateNode}
+              onUpdateGlobalCss={handleUpdateGlobalCss}
+              onUpdateTemplate={setCurrentTemplate}
+              onClose={() => setIsDrawerOpen(false)}
+            />
+          )}
 
-        {/* Right Column: Live Interactive Preview */}
-        <LivePreview
-          template={currentTemplate}
-          previewData={previewData}
-          onSelectNode={handleSelectNode}
-        />
+          <LivePreview
+            template={currentTemplate}
+            previewData={previewData}
+            onSelectNode={handleSelectNode}
+          />
+        </div>
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../styles/app' as *;
 
 .root {
@@ -8,6 +9,9 @@
   bottom: 0;
   background-color: $sidebar-bg-color;
   color: $sidebar-color;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 
   @include media-breakpoint-down(md) {
     transform: translateX(-100%);
@@ -25,9 +29,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: $navbar-height;
   width: 100%;
-  background: $logo-gradient;
 
   a img {
     width: $sidebar-width-open - 60px;
@@ -37,4 +39,84 @@
 .nav {
   padding: 10px 0;
   overflow-y: auto;
+  flex: 1;
 }
+
+.footer {
+  padding: 12px 16px;
+  border-top: 1px solid $gray-200;
+  background-color: $sidebar-bg-color;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: $gray-700;
+  text-decoration: none;
+  border-radius: 4px;
+  padding: 4px 6px;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: $gray-100;
+    color: $brand-primary;
+  }
+}
+
+.userMeta {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  line-height: 1.2;
+}
+
+.userName {
+  font-size: $font-size-small;
+  font-weight: $font-weight-semi-bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userRole {
+  font-size: $font-size-index;
+  color: $gray-500;
+}
+
+.authBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: $font-size-small;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.logoutBtn {
+  background-color: transparent;
+  color: $brand-danger;
+  border-color: $brand-danger;
+
+  &:hover {
+    background-color: $brand-danger;
+    color: $white;
+  }
+}
+
+.loginBtn {
+  background-color: $brand-primary;
+  color: $white;
+
+  &:hover {
+    background-color: color.adjust($brand-primary, $lightness: -10%);
+    color: $white;
+  }
+}
